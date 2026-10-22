@@ -1,0 +1,23 @@
+# dependencias e build
+node_modules/
+.next/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# banco local (legado sqlite)
+*.db
+*.db-journal
+
+# vercel
+.vercel
+
+# ambiente nunca vai para o git (mantenha apenas .env.example)
+.env*
+!.env.example
+
+# artefatos temporarios de exportacao (E2E)
+tmp-*.xlsx
+
+# logs
+mig.log

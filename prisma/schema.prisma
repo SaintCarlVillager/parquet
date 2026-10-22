@@ -1,0 +1,211 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UsuarioPapel {
+  email        String  @id
+  nome         String?
+  papel        String // CHEFE | OFICIAL | PROMOTOR
+  senhaHash    String?
+  oficialEmail String?
+  sessaoVersao Int      @default(0)
+}
+
+model LoginTentativa {
+  chave         String   @id
+  falhas        Int      @default(0)
+  bloqueadoAte  DateTime?
+  atualizadoEm  DateTime @default(now())
+}
+
+model Auditoria {
+  id           Int      @id @default(autoincrement())
+  requestId    String
+  contexto     String
+  acao         String
+  recurso      String
+  usuarioEmail String?
+  papel        String?
+  resultado    String
+  criadaEm     DateTime @default(now())
+
+  @@index([requestId])
+  @@index([usuarioEmail, criadaEm])
+  @@index([recurso, criadaEm])
+  @@index([criadaEm])
+}
+
+model Promotor {
+  id                Int                  @id @default(autoincrement())
+  nome              String
+  apelido           String               @unique
+  email             String?
+  tipo              String               @default("TITULAR")
+  atuacao           String               @default("TODAS")
+  ativo             Boolean              @default(true)
+  generico          Boolean              @default(false)
+  observacoes       String?
+  bloqueios         Bloqueio[]
+  designacoes       Designacao[]
+  varas             PromotorVara[]
+  regras            PromotorRegra[]
+  portariasAfastado Portaria[]           @relation("portaria_afastado")
+  portariasCobridor Portaria[]           @relation("portaria_cobridor")
+  cargos            CargoAdministrativo[]
+  trocasOrigem      Troca[]              @relation("troca_origem")
+  trocasDestino     Troca[]              @relation("troca_destino")
+}
+
+model CargoAdministrativo {
+  cargo      String    @id
+  promotorId Int?
+  promotor   Promotor? @relation(fields: [promotorId], references: [id], onDelete: SetNull)
+}
+
+model Regra {
+  id         Int             @id @default(autoincrement())
+  nome       String
+  tipo       String          @default("SOMENTE")
+  diasCsv    String          @default("")
+  gruposCsv  String          @default("")
+  promotores PromotorRegra[]
+}
+
+model PromotorRegra {
+  id         Int      @id @default(autoincrement())
+  promotorId Int
+  promotor   Promotor @relation(fields: [promotorId], references: [id], onDelete: Cascade)
+  regraId    Int
+  regra      Regra    @relation(fields: [regraId], references: [id], onDelete: Cascade)
+
+  @@unique([promotorId, regraId])
+}
+
+model PromotorVara {
+  id         Int      @id @default(autoincrement())
+  promotorId Int
+  promotor   Promotor @relation(fields: [promotorId], references: [id], onDelete: Cascade)
+  vara       Int
+
+  @@unique([promotorId, vara])
+}
+
+model Feriado {
+  id   Int    @id @default(autoincrement())
+  data String @unique
+  nome String
+}
+
+model Portaria {
+  id                 Int       @id @default(autoincrement())
+  numero             String?
+  promotorAfastadoId Int
+  promotorAfastado   Promotor  @relation("portaria_afastado", fields: [promotorAfastadoId], references: [id], onDelete: Restrict)
+  promotorCobridorId Int?
+  promotorCobridor   Promotor? @relation("portaria_cobridor", fields: [promotorCobridorId], references: [id], onDelete: SetNull)
+  modalidade         String    @default("DESIGNADO")
+  inicio             String
+  fim                String
+  observacao         String?
+
+  @@index([promotorAfastadoId, inicio, fim])
+}
+
+model Posicao {
+  id          Int            @id @default(autoincrement())
+  codigo      String         @unique
+  nome        String
+  grupo       String         @default("AUDIENCIAS")
+  ordem       Int
+  gradeItens  GradeItem[]
+  excecoes    GradeExcecao[]
+  designacoes Designacao[]
+  trocas      Troca[]
+}
+
+model GrupoCarga {
+  grupo String @id
+  nome  String
+  peso  Float
+}
+
+model GradeItem {
+  id        Int     @id @default(autoincrement())
+  diaSemana Int
+  posicaoId Int
+  posicao   Posicao @relation(fields: [posicaoId], references: [id], onDelete: Cascade)
+
+  @@unique([diaSemana, posicaoId])
+}
+
+model GradeExcecao {
+  id        Int     @id @default(autoincrement())
+  data      String
+  posicaoId Int
+  posicao   Posicao @relation(fields: [posicaoId], references: [id], onDelete: Cascade)
+  ativa     Boolean
+  motivo    String?
+
+  @@unique([data, posicaoId])
+}
+
+model Bloqueio {
+  id         Int      @id @default(autoincrement())
+  promotorId Int
+  promotor   Promotor @relation(fields: [promotorId], references: [id], onDelete: Cascade)
+  posicaoId  Int?
+  data       String?
+  motivo     String?
+
+  @@index([promotorId, data])
+}
+
+model Escala {
+  id          Int          @id @default(autoincrement())
+  ano         Int
+  mes         Int
+  status      String       @default("RASCUNHO")
+  observacao  String?
+  criadaEm    DateTime     @default(now())
+  designacoes Designacao[]
+
+  @@unique([ano, mes])
+}
+
+model Troca {
+  id                 Int      @id @default(autoincrement())
+  data               String
+  posicaoId          Int?
+  posicao            Posicao? @relation(fields: [posicaoId], references: [id], onDelete: Cascade)
+  promotorOrigemId  Int?
+  promotorOrigem    Promotor? @relation("troca_origem", fields: [promotorOrigemId], references: [id], onDelete: SetNull)
+  promotorDestinoId Int
+  promotorDestino   Promotor @relation("troca_destino", fields: [promotorDestinoId], references: [id], onDelete: Restrict)
+  observacao        String?
+  criadaEm          DateTime @default(now())
+
+  @@unique([data, posicaoId])
+  @@index([data, promotorDestinoId])
+}
+
+model Designacao {
+  id         Int       @id @default(autoincrement())
+  escalaId   Int
+  escala     Escala    @relation(fields: [escalaId], references: [id], onDelete: Cascade)
+  data       String
+  posicaoId  Int
+  posicao    Posicao   @relation(fields: [posicaoId], references: [id])
+  promotorId Int?
+  promotor   Promotor? @relation(fields: [promotorId], references: [id])
+  origem     String    @default("AUTO")
+  travada    Boolean   @default(false)
+
+  @@unique([escalaId, data, posicaoId])
+  @@index([promotorId, data])
+}

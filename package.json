@@ -1,0 +1,56 @@
+{
+  "name": "escalapjcriminal",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:e2e": "node scripts/roda-e2e.mjs",
+    "test:e2e:gerador": "node scripts/roda-e2e.mjs --group gerador",
+    "test:e2e:regras": "node scripts/roda-e2e.mjs --group regras",
+    "test:e2e:portarias": "node scripts/roda-e2e.mjs --group portarias",
+    "test:e2e:exportacao": "node scripts/roda-e2e.mjs --group exportacao",
+    "test:e2e:autorizacao": "node scripts/roda-e2e.mjs --group autorizacao",
+    "lint": "eslint .",
+    "deploy": "node node_modules/vercel/dist/vc.js",
+    "verify": "node scripts/verifica.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^6.19.3",
+    "@prisma/client": "^6.19.3",
+    "exceljs": "4.4.0",
+    "next": "^15.5.27",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "22.10.7",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.3",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.26",
+    "jsdom": "^29.1.1",
+    "prisma": "^6.19.3",
+    "typescript": "5.7.3",
+    "vercel": "^61.0.0",
+    "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "postcss": "8.5.28",
+    "uuid": "11.1.1"
+  }
+}
