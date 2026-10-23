@@ -38,12 +38,29 @@ function rotulo(designacao, fonte = dados) {
 
 const pjs = dados.promotores.find((promotor) => promotor.apelido === "PJS" && promotor.ativo);
 exigir(pjs?.generico, "PJS generico ativo nao encontrado");
-const auxiliarPjs = dados.designacoes.find((designacao) =>
-  designacao.promotorId === pjs.id && /^\d'$/.test(posicaoPorId.get(designacao.posicaoId)?.codigo ?? "")
-);
-exigir(auxiliarPjs, "PJS nao possui designacao em posicao auxiliar");
-exigir(rotulo(auxiliarPjs) === "ajudando na auxiliar", "rotulo de PJS na auxiliar incorreto");
-console.log("rotulo PJS auxiliar: ajudando na auxiliar");
+const auxiliarPjs = dados.designacoes.find((designacao) => {
+  const codigoPosicao = posicaoPorId.get(designacao.posicaoId)?.codigo ?? "";
+  if (!/^\d'$/.test(codigoPosicao) || designacao.travada) return false;
+  const match = /^(\d)('?)$/.exec(codigoPosicao);
+  const cobre = (pjs.coberturas ?? []).some((item) =>
+    item.inicio <= designacao.data && designacao.data <= item.fim &&
+    (!!item.afastadoAuxiliar === (match[2] === "'")) &&
+    (!item.varas?.length || item.varas.includes(Number(match[1])))
+  );
+  return !cobre;
+});
+exigir(auxiliarPjs, "nenhuma auxiliar livre de cobertura do PJS para testar o rotulo");
+const donoAuxiliar = auxiliarPjs.promotorId;
+const alocadoPjs = await solicitar(`/api/designacoes/${auxiliarPjs.id}`, "PATCH", { promotorId: pjs.id });
+exigirStatus(alocadoPjs.resposta, 200, "alocar PJS na auxiliar");
+try {
+  const escalaPjs = await solicitar(`/api/escalas/${escala.id}`);
+  const designacaoPjs = escalaPjs.corpo.designacoes.find((item) => item.id === auxiliarPjs.id);
+  exigir(rotulo(designacaoPjs, escalaPjs.corpo) === "ajudando na auxiliar", "rotulo de PJS na auxiliar incorreto");
+  console.log("rotulo PJS auxiliar: ajudando na auxiliar");
+} finally {
+  await solicitar(`/api/designacoes/${auxiliarPjs.id}`, "PATCH", { promotorId: donoAuxiliar });
+}
 
 const designacaoTeste = dados.designacoes.find((designacao) => {
   const posicao = posicaoPorId.get(designacao.posicaoId);

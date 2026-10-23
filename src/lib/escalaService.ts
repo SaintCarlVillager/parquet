@@ -13,6 +13,19 @@ import {
 import { diasDoMes, diaSemana } from "@/lib/datas";
 import { cargaAnterior } from "@/lib/carga";
 
+export function deveLiberarReservaPjs(entrada: {
+  promotorId: number | null;
+  origem: string;
+  codigo: string;
+  pjsId: number | null;
+  herdadaPelaPortaria: boolean;
+}): boolean {
+  if (entrada.pjsId === null || entrada.promotorId !== entrada.pjsId) return false;
+  if (entrada.origem !== "AUTO") return false;
+  if (entrada.herdadaPelaPortaria) return false;
+  return /^\d'$/.test(entrada.codigo);
+}
+
 export async function gerarEscalaMes(ano: number, mes: number) {
   // Consultas sequenciais: consultas em lote (Promise.all) não são suportadas pelo driver HTTP do Neon.
   const promotoresDb = await db.promotor.findMany({
@@ -147,27 +160,7 @@ export async function gerarEscalaMes(ano: number, mes: number) {
     }
   }
 
-  // PJS (substituto garantido pelo setor de designações) assume uma das varas
-  // auxiliares do dia, quando houver, desafogando os PJs titulares.
-  // PJE é promotor externo (genérico), não é reserva da auxiliar.
   const pjs = promotoresInput.find((p) => p.generico && p.ativo && p.apelido === "PJS");
-  if (pjs) {
-    const auxPorDia = new Map<string, VagaInput[]>();
-    for (const v of vagas) {
-      if (!/^\d'$/.test(v.codigo)) continue;
-      const lista = auxPorDia.get(v.data) ?? [];
-      lista.push(v);
-      auxPorDia.set(v.data, lista);
-    }
-    for (const [, auxs] of auxPorDia) {
-      auxs.sort((a, b) => a.ordem - b.ordem);
-      const livre = auxs.find((v) => !v.prePromotorId);
-      if (!livre) continue;
-      if (estaDisponivel(pjs, livre.data, livre.codigo, livre.posicaoId, livre.grupo)) {
-        livre.prePromotorId = pjs.id;
-      }
-    }
-  }
 
   const escala = await criarEsqueletoMes(ano, mes);
 
@@ -186,6 +179,18 @@ export async function gerarEscalaMes(ano: number, mes: number) {
     if (!existente?.promotorId) continue;
     const promotor = inputPorId.get(existente.promotorId);
     if (existente.origem === "AUTO" && (custodiaPorDiaPromotor.has(`${existente.promotorId}|${vaga.data}`) || !promotor || !estaDisponivel(promotor, vaga.data, vaga.codigo, vaga.posicaoId, vaga.grupo))) {
+      existente.promotorId = null;
+      continue;
+    }
+    if (
+      deveLiberarReservaPjs({
+        promotorId: existente.promotorId,
+        origem: existente.origem,
+        codigo: vaga.codigo,
+        pjsId: pjs?.id ?? null,
+        herdadaPelaPortaria: vaga.prePromotorId === pjs?.id,
+      })
+    ) {
       existente.promotorId = null;
       continue;
     }
