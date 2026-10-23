@@ -33,6 +33,11 @@ export function diasDoMes(ano: number, mes: number): string[] {
   return out;
 }
 
+function diaUtilNoMes(iso: string, ano: number, mes: number): boolean {
+  const d = parseISODate(iso);
+  return d.getFullYear() === ano && d.getMonth() + 1 === mes;
+}
+
 export function semanasDoMes(ano: number, mes: number): string[][] {
   const dias = diasDoMes(ano, mes);
   if (dias.length === 0) return [];
@@ -52,7 +57,9 @@ export function semanasDoMes(ano: number, mes: number): string[][] {
     }
     cursor.setDate(cursor.getDate() + 1);
   }
-  return semanas;
+  return semanas.filter((semana) =>
+    semana.slice(0, 5).some((iso) => diaUtilNoMes(iso, ano, mes))
+  );
 }
 
 export function formatarDataBR(iso: string): string {
