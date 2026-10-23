@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { estaDisponivel, atuaEm, type PromotorInput } from "@/lib/gerador";
-import { DIAS_SEMANA, diasDoMes, diaSemana, formatarDataBR, parseISODate } from "@/lib/datas";
+import { DIAS_SEMANA, diaSemana, formatarDataBR, parseISODate, semanasDoMes } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { promotorLogadoId } from "@/lib/promotor-logado";
 import { HttpError, httpJson, mensagemHttp } from "@/lib/http";
@@ -175,29 +175,9 @@ export default function EscalaPage() {
     await carregar(mes, ano);
   }
 
-  const dias = useMemo(() => diasDoMes(ano, mes), [ano, mes]);
   const feriadoMap = useMemo(() => new Map((payload?.feriados ?? []).map((f) => [f.data, f.nome])), [payload]);
 
-  const semanas = useMemo(() => {
-    if (dias.length === 0) return [];
-    const primeiro = diaSemana(dias[0]);
-    const inicio = parseISODate(dias[0]);
-    inicio.setDate(inicio.getDate() - ((primeiro + 6) % 7));
-    const semanas: string[][] = [];
-    let atual: string[] = [];
-    const cursor = new Date(inicio);
-    for (let i = 0; i < 42; i++) {
-      const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-      atual.push(iso);
-      if (atual.length === 7) {
-        semanas.push(atual);
-        atual = [];
-        if (iso >= dias[dias.length - 1]) break;
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    return semanas;
-  }, [dias]);
+  const semanas = useMemo(() => semanasDoMes(ano, mes), [ano, mes]);
 
   const desPorChave = useMemo(() => {
     const m = new Map<string, Des>();
