@@ -92,7 +92,7 @@ export default function GradeView() {
           ))}
         </div>
 
-        <table>
+        <table className="table-zebra">
           <thead>
             <tr>
               <th>Posição</th>
