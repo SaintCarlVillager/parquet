@@ -231,14 +231,13 @@ export function gerarEscala(
     dataPorPromotor.get(p.id)!.add(v.data);
   }
 
-  function candidatos(v: VagaInput, relaxarDiasSeguidos = false): PromotorInput[] {
+  function candidatos(v: VagaInput, relaxarMesmaVara = false): PromotorInput[] {
     return disponiveis.filter(
       (p) =>
         estaDisponivel(p, v.data, v.codigo, v.posicaoId, v.grupo) &&
-        // Cargos genéricos (placeholders) podem acumular posições no mesmo dia.
         (p.generico || !dataPorPromotor.get(p.id)!.has(v.data)) &&
         !(v.grupo === "AUDIENCIAS" && limiteAudSemana(p, v.data) && audNaSemana(p.id, v.data) >= 1) &&
-        (relaxarDiasSeguidos || !mesmaVaraAdjacente(p, v))
+        (relaxarMesmaVara || !mesmaVaraAdjacente(p, v))
     );
   }
 
