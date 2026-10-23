@@ -77,7 +77,7 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 - **Portarias de cobertura** (substituíram Afastamentos): quem cobre age **como o cargo coberto** (atuação, varas e regras do afastado) e **herda as audiências** do afastado no período (pré-alocação 1/dia). Afastado fica fora da escala (409 `"afastado (portaria Nº ...)"`). Cobertura limitada ao cargo do afastado (titular "N" vs auxiliar "N'"). Rótulos na escala por modalidade: `acumulando/designado para/auxiliando X`; badge verde `ajudando na auxiliar` para genéricos em auxiliar sem cobertura.
 - **Cargos genéricos** (`generico = true`): PJS/PJE não são pessoas reais — sem limite diário, sem regra de dias consecutivos, cobrem portarias quando escolhidos como cobridor. O PJS **não reserva mais uma auxiliar por dia** (São Paulo não garante a nomeação): a vaga vai para um promotor real ou fica vazia. Designação manual do PJS é preservada ao regerar; a automática antiga, sem portaria de cobertura, é liberada. PJE não é reserva de ninguém.
 - **Secretário/Sub-secretário** (cargos administrativos via `api/cargos`): 1 audiência/semana no máximo; sub assume o lugar do secretário ausente (portaria); quem cobre NÃO herda o limite.
-- **Preferência**: PJ não atua na mesma vara em dias consecutivos (fallback se não houver candidato).
+- **Preferência**: balancear a exposição a cada vara no período da escala (quem já fez mais vezes a vara X perde para quem fez menos; titular `N` e auxiliar `N'` contam a mesma vara).
 - **Regras reutilizáveis** (aba Regras): grupos por tipo + dias da semana, vinculáveis a vários PJs (`SUBSTITUTO` as ignora); exceções pontuais na aba Exceções por mês.
 - **Datas**: strings `"YYYY-MM-DD"` em toda a API (nunca `Date`).
 - **Export/Import de configurações**: `GET /api/configuracoes/export` gera workbook Excel (`src/lib/excelExport.ts`) com abas Afastamentos, Promotores, Regras, Grade e Leia-me (data de datas como texto ISO, pois ExcelJS monta `Date` em UTC). Import round-trip: `POST /api/promotores/import` (CHEFE) e `POST /api/portarias/import` (EDICAO) recebem multipart `arquivo`, acham a aba por nome e casam colunas por tokens normalizados (sem acento/espaço) — apelido é a chave; duplicadas são ignoradas e erros por linha voltam no JSON. Colunas casadas por `colunaDe` (token mais curto; cuidado com tokens que são subpalavra errada, ex. "COBRE" vs "COBRI").
@@ -97,7 +97,7 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 ## Arquivos-chave
 
 - `src/lib/db.ts` — PrismaClient com `PrismaNeonHTTP` (HTTP/443, sem transações).
-- `src/lib/gerador.ts` — motor do gerador (grupos, regras, portarias, genéricos, secretário, dias consecutivos).
+- `src/lib/gerador.ts` — motor do gerador (grupos, regras, portarias, genéricos, secretário, balanceamento de varas).
 - `src/lib/escalaService.ts` — `gerarEscalaMes`: portarias → indisponibilidade/coberturas, pré-alocações, custódias preservadas.
 - Criacao de escala e geracao automatica sao operacoes separadas: `POST /api/escalas` cria apenas o esqueleto; `POST /api/escalas/[id]/gerar` preenche vagas sem Trocas/Ajustes e preserva Custodia e designacoes existentes.
 - `src/app/api/designacoes/[id]/route.ts` — validações do ajuste manual.
