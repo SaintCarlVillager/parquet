@@ -113,7 +113,7 @@ export default function ExcecoesView() {
       </div>
 
       <div className="panel" data-tour="excecoes-lista">
-        <table>
+        <table className="table-zebra">
           <thead>
             <tr>
               <th style={{ textAlign: "left" }}>Data</th>

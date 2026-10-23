@@ -9,6 +9,7 @@
   --text: #212125;
   --muted: #6b7280;
   --custodia: #fef08a;
+  --zebra: #f7f8fa;
   --radius: 10px;
   --sombra: 0 1px 3px rgba(33, 33, 37, 0.08), 0 1px 2px rgba(33, 33, 37, 0.04);
 }
@@ -105,6 +106,13 @@ th {
   color: var(--muted);
 }
 .panel table:not(.grade-semanal) tbody tr:hover { background: #fafbfc; }
+.panel table.table-zebra tbody tr:hover td { background: #fafbfc; }
+
+.table-zebra tbody tr:nth-child(even) td {
+  background: var(--zebra);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 
 a { color: var(--vermelho); }
 
@@ -226,6 +234,16 @@ label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px
   left: 0;
   font-size: 12.5px;
   color: #374151;
+}
+.grade-semanal tbody tr:nth-child(even) td {
+  background: var(--zebra);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.grade-semanal tbody tr:nth-child(even) td.rotulo-pos {
+  background: var(--zebra);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .grade-semanal .custodia-row td { background: var(--custodia); }
 .grade-semanal .custodia-row td.rotulo-pos { background: #fde68a; }
