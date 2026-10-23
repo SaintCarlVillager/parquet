@@ -88,7 +88,7 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 
 - **TDD obrigatorio**: toda funcionalidade nova, alteracao de regra de negocio ou correcao de bug deve seguir o ciclo Red-Green-Refactor. Primeiro escrever ou ajustar o teste que reproduz o comportamento esperado, depois implementar a menor mudanca necessaria e por fim refatorar mantendo todos os testes verdes. Nao considerar uma tarefa concluida sem testes automatizados para os casos de sucesso, negacao e borda relevantes.
 - **Gates antes do Preview**: antes de qualquer `npx vercel`, executar `npm run verify`; para alteracoes que envolvam APIs, geracao, persistencia, autenticacao ou import/export, executar tambem `npm run test:e2e` contra o servidor local e o banco Development. Falha em qualquer teste, typecheck ou build bloqueia o deploy.
-- **Commits incrementais** (usuário prefere commits a cada feature/ajuste concluído), mensagens em português sem acentos.
+- **Commits incrementais** (usuário prefere commits a cada feature/ajuste concluído), mensagens em português sem acentos, no padrão Conventional Commits `tipo(escopo): descricao` (ver `CONTRIBUTING.md`). Titulo de PR squash tambem segue esse padrao.
 - **Toda tarefa termina testada e commitada** (validar com `npx tsc --noEmit` + `npm run build`; podem ser vários commits por tarefa). NUNCA deixar mudanças unstaged acumuladas: deploy sem commit não registra o trabalho no repositório. Se o arquivo já tiver mudanças não commitadas de outra tarefa, isolar o commit (ex.: `git stash`/checkout + reaplicar) para commitar só o que a tarefa alterou.
 - **Sem comentários** no código.
 - Identidade visual MPSP: vermelho `#C40008`, preto `#212125`, Arial (títulos). Impressão A4 paisagem, 1 semana por folha.
