@@ -71,77 +71,72 @@ describe("regras puras do gerador", () => {
   });
 });
 
-describe("rotatividade entre varas", () => {
+describe("balanceamento de varas no periodo", () => {
   const ana = () => base({ id: 1, apelido: "Ana", varas: [1, 2] });
   const bruno = (extra: Partial<PromotorInput> = {}) => base({ id: 2, apelido: "Bruno", varas: [1, 2], ...extra });
-  const dia1: VagaInput[] = [
-    { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
-    { data: "2026-09-01", posicaoId: 11, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 2 },
-  ];
-  const dia2: VagaInput = { data: "2026-09-02", posicaoId: 12, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 3 };
   const idEm = (resultado: { alocacoes: { data: string; posicaoId: number; promotorId: number | null }[] }, posicaoId: number) =>
     resultado.alocacoes.find((a) => a.posicaoId === posicaoId)?.promotorId;
 
-  it("no dia seguinte prefere quem sentou outra vara", () => {
-    const resultado = gerarEscala([...dia1, dia2], [ana(), bruno()], { AUDIENCIAS: 1 });
-    expect(idEm(resultado, 10)).toBe(1);
-    expect(idEm(resultado, 11)).toBe(2);
-    expect(idEm(resultado, 12)).toBe(2);
-  });
-
-  it("repete a vara quando so ela resta", () => {
-    const resultado = gerarEscala(
-      [...dia1, dia2],
-      [ana(), bruno({ bloqueios: [{ posicaoId: null, data: "2026-09-02" }] })],
-      { AUDIENCIAS: 1 }
-    );
-    expect(idEm(resultado, 12)).toBe(1);
-  });
-
-  it("quem sentou outra vara ganha de quem repete com carga menor", () => {
+  it("prefere quem tem menos exposicoes a mesma vara no periodo", () => {
     const vagas: VagaInput[] = [
-      ...dia1,
-      { data: "2026-09-03", posicaoId: 13, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 4, prePromotorId: 1 },
-      { data: "2026-09-03", posicaoId: 14, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 5, prePromotorId: 2 },
-      dia2,
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
+      { data: "2026-09-03", posicaoId: 11, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 1 },
+      { data: "2026-09-05", posicaoId: 12, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 3, prePromotorId: 2 },
+      { data: "2026-09-08", posicaoId: 13, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 4 },
     ];
     const carga = new Map<number, Record<string, number>>([[2, { AUDIENCIAS: 5 }]]);
     const resultado = gerarEscala(vagas, [ana(), bruno()], { AUDIENCIAS: 1 }, carga);
-    expect(idEm(resultado, 12)).toBe(2);
+    expect(idEm(resultado, 13)).toBe(2);
   });
 
-  it("olha a mesma vara no dia seguinte ja preenchido", () => {
+  it("repete a vara quando so resta quem ja a fez", () => {
     const vagas: VagaInput[] = [
-      dia2,
-      { data: "2026-09-03", posicaoId: 13, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 4, prePromotorId: 1 },
-      { data: "2026-09-03", posicaoId: 14, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 5, prePromotorId: 2 },
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
+      { data: "2026-09-02", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2 },
+    ];
+    const resultado = gerarEscala(
+      vagas,
+      [ana(), bruno({ bloqueios: [{ posicaoId: null, data: "2026-09-02" }] })],
+      { AUDIENCIAS: 1 }
+    );
+    expect(idEm(resultado, 11)).toBe(1);
+  });
+
+  it("titular e auxiliar da mesma vara compartilham a contagem", () => {
+    const vagas: VagaInput[] = [
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
+      { data: "2026-09-02", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 1 },
+      { data: "2026-09-03", posicaoId: 12, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 3, prePromotorId: 2 },
+      { data: "2026-09-04", posicaoId: 13, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 4 },
     ];
     const resultado = gerarEscala(vagas, [ana(), bruno()], { AUDIENCIAS: 1 });
-    expect(idEm(resultado, 12)).toBe(2);
+    expect(idEm(resultado, 13)).toBe(2);
   });
 
-  it("generico segue livre para repetir a vara", () => {
-    const pjs = base({ id: 3, apelido: "PJS", varas: [1, 2], generico: true });
-    const vagas: VagaInput[] = [
-      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
-      { data: "2026-09-01", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 3 },
-      dia2,
-    ];
-    const carga = new Map<number, Record<string, number>>([[3, { AUDIENCIAS: 5 }]]);
-    const resultado = gerarEscala(vagas, [ana(), pjs], { AUDIENCIAS: 1 }, carga);
-    expect(idEm(resultado, 12)).toBe(3);
-  });
-
-  it("entre quem precisa repetir a vara fica a menor carga", () => {
+  it("entre iguais em exposicao a vara fica a menor carga", () => {
     const zulu = base({ id: 2, apelido: "Zulu", varas: [1, 2] });
     const vagas: VagaInput[] = [
-      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
-      { data: "2026-09-01", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 2 },
-      dia2,
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1 },
     ];
     const carga = new Map<number, Record<string, number>>([[2, { AUDIENCIAS: 5 }]]);
     const resultado = gerarEscala(vagas, [ana(), zulu], { AUDIENCIAS: 1 }, carga);
-    expect(idEm(resultado, 12)).toBe(1);
+    expect(idEm(resultado, 10)).toBe(1);
+  });
+
+  it("espalha a mesma vara entre promotores ao longo do periodo", () => {
+    const vagas: VagaInput[] = [];
+    for (let d = 1; d <= 6; d++) {
+      const data = `2026-09-0${d}`;
+      vagas.push({ data, posicaoId: 10 + d, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: d });
+    }
+    const resultado = gerarEscala(vagas, [ana(), bruno()], { AUDIENCIAS: 1 });
+    const porPj = new Map<number, number>();
+    for (const a of resultado.alocacoes) {
+      if (!a.promotorId) continue;
+      porPj.set(a.promotorId, (porPj.get(a.promotorId) ?? 0) + 1);
+    }
+    expect(porPj.get(1)).toBe(3);
+    expect(porPj.get(2)).toBe(3);
   });
 
   it("desempata pela quantidade de designacoes antes do apelido", () => {

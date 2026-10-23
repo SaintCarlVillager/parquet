@@ -73,12 +73,6 @@ function diaAnterior(iso: string): string {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 }
 
-function diaSeguinte(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  const dt = new Date(y, m - 1, d + 1);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-}
-
 export function atuaEm(p: { atuacao: string }, codigo: string): boolean {
   if (p.atuacao === "CUSTODIA") return codigo === "C";
   if (p.atuacao === "PLANTAO") return codigo === "P";
@@ -177,7 +171,7 @@ export function gerarEscala(
   const cargaGrupo = new Map<number, Map<string, number>>();
   const designacoes = new Map<number, number>();
   const dataPorPromotor = new Map<number, Set<string>>();
-  const varasPorDia = new Map<number, Map<string, number>>();
+  const exposicaoVara = new Map<number, Map<number, number>>();
   const alocadas = new Map<string, number>();
   const audSemana = new Map<number, Map<string, number>>();
 
@@ -190,25 +184,23 @@ export function gerarEscala(
     m.set(chave, (m.get(chave) ?? 0) + 1);
     audSemana.set(pid, m);
   };
+  const exposicaoDe = (pid: number, vara: number | null) => {
+    if (vara === null) return 0;
+    return exposicaoVara.get(pid)!.get(vara) ?? 0;
+  };
   const registrarVara = (pid: number, v: VagaInput) => {
     if (v.grupo !== "AUDIENCIAS") return;
     const vara = varaDe(v.codigo);
     if (vara === null) return;
-    varasPorDia.get(pid)!.set(v.data, vara);
-  };
-  const mesmaVaraAdjacente = (p: PromotorInput, v: VagaInput) => {
-    if (p.generico || v.grupo !== "AUDIENCIAS") return false;
-    const vara = varaDe(v.codigo);
-    if (vara === null) return false;
-    const dias = varasPorDia.get(p.id)!;
-    return dias.get(diaAnterior(v.data)) === vara || dias.get(diaSeguinte(v.data)) === vara;
+    const mapa = exposicaoVara.get(pid)!;
+    mapa.set(vara, (mapa.get(vara) ?? 0) + 1);
   };
 
   for (const p of mapeaveis) {
     cargaGrupo.set(p.id, new Map(Object.entries(cargaInicial.get(p.id) ?? {})));
     designacoes.set(p.id, 0);
     dataPorPromotor.set(p.id, new Set());
-    varasPorDia.set(p.id, new Map());
+    exposicaoVara.set(p.id, new Map());
     audSemana.set(p.id, new Map());
     for (const dc of p.diasCustodia ?? []) dataPorPromotor.get(p.id)!.add(dc);
   }
@@ -219,7 +211,6 @@ export function gerarEscala(
     const key = `${v.data}|${v.posicaoId}`;
     const p = mapeaveis.find((x) => x.id === v.prePromotorId);
     if (!p) continue;
-    // Genéricos podem acumular posições no mesmo dia (ex.: cobertura + auxiliar).
     if (!p.generico && dataPorPromotor.get(p.id)!.has(v.data)) continue;
     if (!estaDisponivel(p, v.data, v.codigo, v.posicaoId, v.grupo)) continue;
     alocadas.set(key, p.id);
@@ -231,13 +222,12 @@ export function gerarEscala(
     dataPorPromotor.get(p.id)!.add(v.data);
   }
 
-  function candidatos(v: VagaInput, relaxarMesmaVara = false): PromotorInput[] {
+  function candidatos(v: VagaInput): PromotorInput[] {
     return disponiveis.filter(
       (p) =>
         estaDisponivel(p, v.data, v.codigo, v.posicaoId, v.grupo) &&
         (p.generico || !dataPorPromotor.get(p.id)!.has(v.data)) &&
-        !(v.grupo === "AUDIENCIAS" && limiteAudSemana(p, v.data) && audNaSemana(p.id, v.data) >= 1) &&
-        (relaxarMesmaVara || !mesmaVaraAdjacente(p, v))
+        !(v.grupo === "AUDIENCIAS" && limiteAudSemana(p, v.data) && audNaSemana(p.id, v.data) >= 1)
     );
   }
 
@@ -257,18 +247,19 @@ export function gerarEscala(
 
   for (const v of ordenadas) {
     if (preAlocadas.has(`${v.data}|${v.posicaoId}`)) continue;
-    let cands = candidatos(v);
-    if (cands.length === 0 && v.grupo === "AUDIENCIAS") cands = candidatos(v, true);
+    const cands = candidatos(v);
     if (cands.length === 0) continue;
+    const vara = v.grupo === "AUDIENCIAS" ? varaDe(v.codigo) : null;
     let melhor = cands[0];
+    let melhorExp = exposicaoDe(melhor.id, vara);
     let melhorScore = score(melhor, v);
     for (let i = 1; i < cands.length; i++) {
       const atual = cands[i];
-      const repeteAtual = mesmaVaraAdjacente(atual, v);
-      const repeteMelhor = mesmaVaraAdjacente(melhor, v);
-      if (repeteAtual !== repeteMelhor) {
-        if (!repeteAtual) {
+      const expAtual = exposicaoDe(atual.id, vara);
+      if (expAtual !== melhorExp) {
+        if (expAtual < melhorExp) {
           melhor = atual;
+          melhorExp = expAtual;
           melhorScore = score(atual, v);
         }
         continue;
@@ -282,6 +273,7 @@ export function gerarEscala(
         (s === melhorScore && dAtual === dMelhor && atual.apelido < melhor.apelido)
       ) {
         melhor = atual;
+        melhorExp = expAtual;
         melhorScore = s;
       }
     }
