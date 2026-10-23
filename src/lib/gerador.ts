@@ -58,11 +58,14 @@ export interface ResultadoGeracao {
   alocacoes: Alocacao[];
   cargaPorGrupo: Map<number, Record<string, number>>;
   vagaEmBranco: number;
-  iteracoesMelhoria: number;
 }
 
 const W_RECENCIA = 0.6;
-const W_REPETICAO = 0.15;
+
+function varaDe(codigo: string): number | null {
+  const m = /^(\d)'?$/.exec(codigo);
+  return m ? Number(m[1]) : null;
+}
 
 function diaAnterior(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
@@ -84,10 +87,10 @@ export function atuaEm(p: { atuacao: string }, codigo: string): boolean {
 }
 
 export function atuaNaVara(p: { varas?: number[] }, codigo: string): boolean {
-  const m = /^(\d)'?$/.exec(codigo);
-  if (!m) return true;
+  const vara = varaDe(codigo);
+  if (vara === null) return true;
   if (!p.varas || p.varas.length === 0) return true;
-  return p.varas.includes(Number(m[1]));
+  return p.varas.includes(vara);
 }
 
 export function coberturaAtiva(
@@ -173,11 +176,10 @@ export function gerarEscala(
   );
   const cargaGrupo = new Map<number, Map<string, number>>();
   const designacoes = new Map<number, number>();
-  const posicoesPorPromotor = new Map<number, Map<number, number>>();
   const dataPorPromotor = new Map<number, Set<string>>();
+  const varasPorDia = new Map<number, Map<string, number>>();
   const alocadas = new Map<string, number>();
   const audSemana = new Map<number, Map<string, number>>();
-  const audDias = new Map<number, Set<string>>();
 
   const pesoDe = (grupo: string) => pesos[grupo] ?? 1;
   const cargaDe = (pid: number, grupo: string) => cargaGrupo.get(pid)!.get(grupo) ?? 0;
@@ -188,19 +190,26 @@ export function gerarEscala(
     m.set(chave, (m.get(chave) ?? 0) + 1);
     audSemana.set(pid, m);
   };
-  // Preferência: não escalar o mesmo PJ em dias consecutivos nas varas.
-  const audVizinho = (pid: number, data: string) => {
-    const s = audDias.get(pid);
-    return !!s && (s.has(diaAnterior(data)) || s.has(diaSeguinte(data)));
+  const registrarVara = (pid: number, v: VagaInput) => {
+    if (v.grupo !== "AUDIENCIAS") return;
+    const vara = varaDe(v.codigo);
+    if (vara === null) return;
+    varasPorDia.get(pid)!.set(v.data, vara);
+  };
+  const mesmaVaraAdjacente = (p: PromotorInput, v: VagaInput) => {
+    if (p.generico || v.grupo !== "AUDIENCIAS") return false;
+    const vara = varaDe(v.codigo);
+    if (vara === null) return false;
+    const dias = varasPorDia.get(p.id)!;
+    return dias.get(diaAnterior(v.data)) === vara || dias.get(diaSeguinte(v.data)) === vara;
   };
 
   for (const p of mapeaveis) {
     cargaGrupo.set(p.id, new Map(Object.entries(cargaInicial.get(p.id) ?? {})));
     designacoes.set(p.id, 0);
-    posicoesPorPromotor.set(p.id, new Map());
     dataPorPromotor.set(p.id, new Set());
+    varasPorDia.set(p.id, new Map());
     audSemana.set(p.id, new Map());
-    audDias.set(p.id, new Set());
     for (const dc of p.diasCustodia ?? []) dataPorPromotor.get(p.id)!.add(dc);
   }
 
@@ -215,14 +224,10 @@ export function gerarEscala(
     if (!estaDisponivel(p, v.data, v.codigo, v.posicaoId, v.grupo)) continue;
     alocadas.set(key, p.id);
     preAlocadas.add(key);
-    if (v.grupo === "AUDIENCIAS") {
-      incAudSemana(p.id, v.data);
-      audDias.get(p.id)!.add(v.data);
-    }
+    if (v.grupo === "AUDIENCIAS") incAudSemana(p.id, v.data);
+    registrarVara(p.id, v);
     cargaGrupo.get(p.id)!.set(v.grupo, cargaDe(p.id, v.grupo) + pesoDe(v.grupo));
     designacoes.set(p.id, designacoes.get(p.id)! + 1);
-    const mapa = posicoesPorPromotor.get(p.id)!;
-    mapa.set(v.posicaoId, (mapa.get(v.posicaoId) ?? 0) + 1);
     dataPorPromotor.get(p.id)!.add(v.data);
   }
 
@@ -233,14 +238,13 @@ export function gerarEscala(
         // Cargos genéricos (placeholders) podem acumular posições no mesmo dia.
         (p.generico || !dataPorPromotor.get(p.id)!.has(v.data)) &&
         !(v.grupo === "AUDIENCIAS" && limiteAudSemana(p, v.data) && audNaSemana(p.id, v.data) >= 1) &&
-        !(v.grupo === "AUDIENCIAS" && !relaxarDiasSeguidos && !p.generico && audVizinho(p.id, v.data))
+        (relaxarDiasSeguidos || !mesmaVaraAdjacente(p, v))
     );
   }
 
   function score(p: PromotorInput, v: VagaInput): number {
     let s = cargaDe(p.id, v.grupo);
     if (dataPorPromotor.get(p.id)!.has(diaAnterior(v.data))) s += W_RECENCIA;
-    s += (posicoesPorPromotor.get(p.id)!.get(v.posicaoId) ?? 0) * W_REPETICAO;
     return s;
   }
 
@@ -255,86 +259,39 @@ export function gerarEscala(
   for (const v of ordenadas) {
     if (preAlocadas.has(`${v.data}|${v.posicaoId}`)) continue;
     let cands = candidatos(v);
-    // Preferência de dias seguidos é flexibilizada quando não sobra candidato.
     if (cands.length === 0 && v.grupo === "AUDIENCIAS") cands = candidatos(v, true);
-    if (cands.length === 0) {
-      continue;
-    }
+    if (cands.length === 0) continue;
     let melhor = cands[0];
     let melhorScore = score(melhor, v);
     for (let i = 1; i < cands.length; i++) {
-      const s = score(cands[i], v);
+      const atual = cands[i];
+      const repeteAtual = mesmaVaraAdjacente(atual, v);
+      const repeteMelhor = mesmaVaraAdjacente(melhor, v);
+      if (repeteAtual !== repeteMelhor) {
+        if (!repeteAtual) {
+          melhor = atual;
+          melhorScore = score(atual, v);
+        }
+        continue;
+      }
+      const s = score(atual, v);
+      const dAtual = designacoes.get(atual.id)!;
+      const dMelhor = designacoes.get(melhor.id)!;
       if (
         s < melhorScore ||
-        (s === melhorScore &&
-          (designacoes.get(cands[i].id)! < designacoes.get(melhor.id)! ||
-            cands[i].apelido < melhor.apelido))
+        (s === melhorScore && dAtual < dMelhor) ||
+        (s === melhorScore && dAtual === dMelhor && atual.apelido < melhor.apelido)
       ) {
-        melhor = cands[i];
+        melhor = atual;
         melhorScore = s;
       }
     }
     alocadas.set(`${v.data}|${v.posicaoId}`, melhor.id);
-    if (v.grupo === "AUDIENCIAS") {
-      incAudSemana(melhor.id, v.data);
-      audDias.get(melhor.id)!.add(v.data);
-    }
+    if (v.grupo === "AUDIENCIAS") incAudSemana(melhor.id, v.data);
+    registrarVara(melhor.id, v);
     cargaGrupo.get(melhor.id)!.set(v.grupo, cargaDe(melhor.id, v.grupo) + pesoDe(v.grupo));
     designacoes.set(melhor.id, designacoes.get(melhor.id)! + 1);
-    const mapa = posicoesPorPromotor.get(melhor.id)!;
-    mapa.set(v.posicaoId, (mapa.get(v.posicaoId) ?? 0) + 1);
     dataPorPromotor.get(melhor.id)!.add(v.data);
-  }
-
-  let iteracoes = 0;
-  let melhorou = true;
-  while (melhorou && iteracoes < 100) {
-    melhorou = false;
-    iteracoes++;
-    const lista = vagas.filter((v) => {
-      const key = `${v.data}|${v.posicaoId}`;
-      return alocadas.has(key) && !preAlocadas.has(key);
-    });
-    for (let i = 0; i < lista.length && !melhorou; i++) {
-      for (let j = i + 1; j < lista.length; j++) {
-        const v1 = lista[i];
-        const v2 = lista[j];
-        if (v1.data === v2.data || v1.grupo !== v2.grupo) continue;
-        const p1 = alocadas.get(`${v1.data}|${v1.posicaoId}`)!;
-        const p2 = alocadas.get(`${v2.data}|${v2.posicaoId}`)!;
-        if (p1 === p2) continue;
-        const c1 = disponiveis.find((p) => p.id === p1)!;
-        const c2 = disponiveis.find((p) => p.id === p2)!;
-        if (!estaDisponivel(c2, v1.data, v1.codigo, v1.posicaoId, v1.grupo)) continue;
-        if (!estaDisponivel(c1, v2.data, v2.codigo, v2.posicaoId, v2.grupo)) continue;
-        if (dataPorPromotor.get(c2.id)!.has(v1.data)) continue;
-        if (dataPorPromotor.get(c1.id)!.has(v2.data)) continue;
-        if (v1.grupo === "AUDIENCIAS" && limiteAudSemana(c2, v1.data) && audNaSemana(c2.id, v1.data) >= 1) continue;
-        if (v2.grupo === "AUDIENCIAS" && limiteAudSemana(c1, v2.data) && audNaSemana(c1.id, v2.data) >= 1) continue;
-        if (v1.grupo === "AUDIENCIAS" && audVizinho(c2.id, v1.data)) continue;
-        if (v2.grupo === "AUDIENCIAS" && audVizinho(c1.id, v2.data)) continue;
-        const antes = Math.abs(cargaDe(p1, v1.grupo) - cargaDe(p2, v1.grupo));
-        const depois = Math.abs(
-          cargaDe(p1, v1.grupo) + pesoDe(v2.grupo) - (cargaDe(p2, v1.grupo) + pesoDe(v1.grupo))
-        );
-        if (depois < antes - 1e-9) {
-          alocadas.set(`${v1.data}|${v1.posicaoId}`, p2);
-          alocadas.set(`${v2.data}|${v2.posicaoId}`, p1);
-          cargaGrupo.get(p1)!.set(v1.grupo, cargaDe(p1, v1.grupo) + pesoDe(v2.grupo) - pesoDe(v1.grupo));
-          cargaGrupo.get(p2)!.set(v1.grupo, cargaDe(p2, v1.grupo) + pesoDe(v1.grupo) - pesoDe(v2.grupo));
-          if (v1.grupo === "AUDIENCIAS") {
-            audDias.get(p1)!.delete(v1.data);
-            audDias.get(p2)!.add(v1.data);
-          }
-          if (v2.grupo === "AUDIENCIAS") {
-            audDias.get(p2)!.delete(v2.data);
-            audDias.get(p1)!.add(v2.data);
-          }
-          melhorou = true;
-          break;
-        }
-      }
-    }
   }
 
   const alocacoes: Alocacao[] = vagas.map((v) => {
@@ -358,6 +315,5 @@ export function gerarEscala(
     alocacoes,
     cargaPorGrupo,
     vagaEmBranco: vagas.length - alocadas.size,
-    iteracoesMelhoria: iteracoes,
   };
 }

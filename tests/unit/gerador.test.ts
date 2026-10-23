@@ -110,6 +110,40 @@ describe("rotatividade entre varas", () => {
     expect(idEm(resultado, 12)).toBe(2);
   });
 
+  it("olha a mesma vara no dia seguinte ja preenchido", () => {
+    const vagas: VagaInput[] = [
+      dia2,
+      { data: "2026-09-03", posicaoId: 13, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 4, prePromotorId: 1 },
+      { data: "2026-09-03", posicaoId: 14, codigo: "2", grupo: "AUDIENCIAS", peso: 1, ordem: 5, prePromotorId: 2 },
+    ];
+    const resultado = gerarEscala(vagas, [ana(), bruno()], { AUDIENCIAS: 1 });
+    expect(idEm(resultado, 12)).toBe(2);
+  });
+
+  it("generico segue livre para repetir a vara", () => {
+    const pjs = base({ id: 3, apelido: "PJS", varas: [1, 2], generico: true });
+    const vagas: VagaInput[] = [
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
+      { data: "2026-09-01", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 3 },
+      dia2,
+    ];
+    const carga = new Map<number, Record<string, number>>([[3, { AUDIENCIAS: 5 }]]);
+    const resultado = gerarEscala(vagas, [ana(), pjs], { AUDIENCIAS: 1 }, carga);
+    expect(idEm(resultado, 12)).toBe(3);
+  });
+
+  it("entre quem precisa repetir a vara fica a menor carga", () => {
+    const zulu = base({ id: 2, apelido: "Zulu", varas: [1, 2] });
+    const vagas: VagaInput[] = [
+      { data: "2026-09-01", posicaoId: 10, codigo: "1", grupo: "AUDIENCIAS", peso: 1, ordem: 1, prePromotorId: 1 },
+      { data: "2026-09-01", posicaoId: 11, codigo: "1'", grupo: "AUDIENCIAS", peso: 1, ordem: 2, prePromotorId: 2 },
+      dia2,
+    ];
+    const carga = new Map<number, Record<string, number>>([[2, { AUDIENCIAS: 5 }]]);
+    const resultado = gerarEscala(vagas, [ana(), zulu], { AUDIENCIAS: 1 }, carga);
+    expect(idEm(resultado, 12)).toBe(1);
+  });
+
   it("desempata pela quantidade de designacoes antes do apelido", () => {
     const zulu = base({ id: 2, apelido: "Zulu", varas: [1, 2] });
     const vagas: VagaInput[] = [
