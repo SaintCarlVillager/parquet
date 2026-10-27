@@ -39,28 +39,42 @@ export default function LoginPage() {
 
   return (
     <div className="login-fundo">
-      <form className="login-caixa" onSubmit={entrar}>
+      <form
+        id="conteudo-principal"
+        className="login-caixa"
+        onSubmit={entrar}
+        aria-labelledby="login-titulo"
+        tabIndex={-1}
+      >
         <div className="login-logo">
-          <div className="logo-mpsp">
+          <div className="logo-mpsp" aria-hidden="true">
             <span className="mp">MP</span>
             <span className="sp">SP</span>
           </div>
-          <h1>Escala de Audiências Criminais</h1>
+          <h1 id="login-titulo">Escala de Audiências Criminais</h1>
         </div>
-        <label className="campo">
+        <label className="campo" htmlFor="login-email">
           E-mail
           <input
+            id="login-email"
+            name="email"
             type="email"
+            inputMode="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"
+            spellCheck={false}
+            autoCapitalize="none"
+            autoCorrect="off"
             autoFocus
             required
           />
         </label>
-        <label className="campo">
+        <label className="campo" htmlFor="login-senha">
           Senha
           <input
+            id="login-senha"
+            name="password"
             type="password"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
@@ -68,9 +82,13 @@ export default function LoginPage() {
             required
           />
         </label>
-        {erro && <div className="login-erro">{erro}</div>}
-        <button type="submit" className="btn primario" disabled={carregando}>
-          {carregando ? "Entrando..." : "Entrar"}
+        {erro && (
+          <div className="login-erro" role="alert" aria-live="assertive">
+            {erro}
+          </div>
+        )}
+        <button type="submit" className="btn primario" disabled={carregando} aria-busy={carregando}>
+          {carregando ? "Entrando…" : "Entrar"}
         </button>
         <span className={`badge-ambiente ${ambiente}`}>{rotuloAmbiente}</span>
       </form>

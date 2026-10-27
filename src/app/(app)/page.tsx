@@ -21,8 +21,8 @@ export default async function Dashboard() {
 
   return (
     <div>
-      <h2 data-tour="/-titulo">Dashboard</h2>
-      <div className="cards">
+      <h2 className="page-titulo" data-tour="/-titulo">Dashboard</h2>
+      <div className="cards" aria-label="Resumo">
         <div className="card">
           <div className="valor">{promotores}</div>
           <div className="rotulo">Promotores ativos</div>
@@ -38,14 +38,20 @@ export default async function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3 style={{ marginTop: 0 }}>{chefe ? "Comece por aqui" : "Atalhos"}</h3>
+        <h3 className="painel-titulo">{chefe ? "Comece por aqui" : "Atalhos"}</h3>
         {chefe ? (
-          <p>
-            1. Confira o cadastro de <Link href="/promotores">promotores</Link> e{" "}
-            <Link href="/grade">grade de posições</Link>.<br />
-            2. Lance <Link href="/portarias">portarias de cobertura</Link> e <Link href="/feriados">feriados</Link>.<br />
-            3. Gere a <Link href="/escala">escala mensal</Link>, ajuste manualmente e publique.
-          </p>
+          <ol className="atalhos-lista">
+            <li>
+              Confira o cadastro de <Link href="/promotores">promotores</Link> e{" "}
+              <Link href="/grade">grade de posições</Link>.
+            </li>
+            <li>
+              Lance <Link href="/portarias">portarias de cobertura</Link> e <Link href="/feriados">feriados</Link>.
+            </li>
+            <li>
+              Gere a <Link href="/escala">escala mensal</Link>, ajuste manualmente e publique.
+            </li>
+          </ol>
         ) : (
           <p>
             Consulte a <Link href="/escala">escala mensal</Link>, a <Link href="/custodia">custódia</Link> e as{" "}
@@ -55,7 +61,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3 style={{ marginTop: 0 }}>Escalas recentes</h3>
+        <h3 className="painel-titulo">Escalas recentes</h3>
         {escalas.length === 0 ? (
           <p className="muted">Nenhuma escala gerada ainda.</p>
         ) : (
@@ -65,15 +71,15 @@ export default async function Dashboard() {
                 <th>Mês</th>
                 <th>Status</th>
                 <th>Designações</th>
-                <th></th>
+                <th><span className="sr-only">Ações</span></th>
               </tr>
             </thead>
             <tbody>
               {escalas.map((e) => (
                 <tr key={e.id}>
-                  <td>{String(e.mes).padStart(2, "0")}/{e.ano}</td>
+                  <td className="num">{String(e.mes).padStart(2, "0")}/{e.ano}</td>
                   <td><span className={`badge ${e.status}`}>{e.status}</span></td>
-                  <td>{e._count.designacoes}</td>
+                  <td className="num">{e._count.designacoes}</td>
                   <td>
                     <Link href={`/escala?mes=${e.mes}&ano=${e.ano}`}>Abrir</Link>{" "}
                     {chefe && <ExcluirEscalaBotao id={e.id} rotulo={`${String(e.mes).padStart(2, "0")}/${e.ano}`} />}

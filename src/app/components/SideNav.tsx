@@ -132,17 +132,31 @@ export default function SideNav({ nome, papel, email }: SessaoUi) {
           <span />
         </button>
       </div>
-      <nav>
+      <nav aria-label="Principal">
         {links
           .filter((l) => l.papeis.includes(papel))
-          .map((l) => (
-            <Link key={l.href} href={l.href} className={pathname === l.href ? "active" : ""} onClick={() => setMenuAberto(false)}>
-              {l.ico}
-              {l.label}
-            </Link>
-          ))}
+          .map((l) => {
+            const ativo = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={ativo ? "active" : ""}
+                aria-current={ativo ? "page" : undefined}
+                onClick={() => setMenuAberto(false)}
+              >
+                {l.ico}
+                {l.label}
+              </Link>
+            );
+          })}
         {papel === "CHEFE" && (
-          <Link href="/usuarios" className={pathname === "/usuarios" ? "active" : ""} onClick={() => setMenuAberto(false)}>
+          <Link
+            href="/usuarios"
+            className={pathname === "/usuarios" ? "active" : ""}
+            aria-current={pathname === "/usuarios" ? "page" : undefined}
+            onClick={() => setMenuAberto(false)}
+          >
             <Ico><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" /><path d="M19 2v4M17 4h4" /></Ico>
             Usuários e acessos
           </Link>
@@ -159,13 +173,14 @@ export default function SideNav({ nome, papel, email }: SessaoUi) {
             type="button"
             className="btn-tour"
             onClick={abrirTour}
+            aria-label={primeiraVisita ? "Abrir tour guiado (primeira visita)" : "Abrir tour guiado"}
             title={primeiraVisita ? "Primeira visita — veja o tour guiado" : "Ver tour guiado"}
           >
             ?
-            {primeiraVisita && <span className="tour-badge" aria-hidden>1</span>}
+            {primeiraVisita && <span className="tour-badge" aria-hidden="true">1</span>}
           </button>
-          <button type="button" className="btn-sair" onClick={sair} disabled={saindo}>
-            {saindo ? "Saindo..." : "Sair"}
+          <button type="button" className="btn-sair" onClick={sair} disabled={saindo} aria-busy={saindo}>
+            {saindo ? "Saindo…" : "Sair"}
           </button>
         </div>
       </div>

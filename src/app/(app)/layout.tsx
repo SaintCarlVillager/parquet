@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <TourProvider>
         <div className="app">
           <SideNav {...sessao} />
-          <main className="main">{children}</main>
+          <main id="conteudo-principal" className="main" tabIndex={-1}>{children}</main>
         </div>
       </TourProvider>
     </SessaoProvider>
