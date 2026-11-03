@@ -17,7 +17,7 @@ export default function AcoesExcel({ chefe }: { chefe: boolean }) {
 
   return (
     <div className="panel no-print" data-tour="configuracoes-acoes">
-      <h3 style={{ marginTop: 0 }}>Backup e restauração</h3>
+      <h2 style={{ marginTop: 0 }}>Backup e restauração</h2>
       <p className="muted">Exporte um backup das configurações ou importe uma planilha preenchida conforme o modelo exportado.</p>
       <div className="linha">
         <a

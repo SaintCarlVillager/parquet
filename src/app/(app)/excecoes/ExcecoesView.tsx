@@ -77,7 +77,7 @@ export default function ExcecoesView() {
 
   return (
     <div>
-      <h2 data-tour="excecoes-titulo">Exceções da grade</h2>
+      <h1 className="page-titulo" data-tour="excecoes-titulo">Exceções da grade</h1>
       <p className="muted" style={{ marginTop: -8 }}>
         Liga/desliga posições em dias específicos, criando exceções à grade padrão.
         <strong> Fundo âmbar</strong> = exceção explícita registrada para aquele dia/posição, ou seja,
@@ -90,14 +90,14 @@ export default function ExcecoesView() {
       <div className="panel">
         <div className="linha">
           <div className="campo">
-            <label>Mês</label>
-            <select value={mes} onChange={(e) => setMes(Number(e.target.value))}>
+            <label htmlFor="excecoes-mes">Mês</label>
+            <select id="excecoes-mes" value={mes} onChange={(e) => setMes(Number(e.target.value))}>
               {MESES.map((nome, i) => <option key={nome} value={i + 1}>{nome}</option>)}
             </select>
           </div>
           <div className="campo">
-            <label>Ano</label>
-            <select value={ano} onChange={(e) => setAno(Number(e.target.value))}>
+            <label htmlFor="excecoes-ano">Ano</label>
+            <select id="excecoes-ano" value={ano} onChange={(e) => setAno(Number(e.target.value))}>
               {[agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1].map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}

@@ -281,7 +281,7 @@ export default function EscalaPage() {
 
   return (
     <div>
-      <h2 className="no-print" data-tour="escala-titulo">Escala mensal</h2>
+      <h1 className="page-titulo no-print" data-tour="escala-titulo">Escala mensal</h1>
       {erro && <p className="erro">{erro}</p>}
       {msg && <p className="sucesso">{msg}</p>}
       {vagasEmBranco > 0 && !gerando && !carregando && (
@@ -294,14 +294,14 @@ export default function EscalaPage() {
       <div className="panel no-print" data-tour="escala-controles">
         <div className="linha">
           <div className="campo">
-            <label>Mês</label>
-            <select value={mes} onChange={(e) => { const m = Number(e.target.value); setMes(m); carregar(m, ano); }}>
+            <label htmlFor="escala-mes">Mês</label>
+            <select id="escala-mes" value={mes} onChange={(e) => { const m = Number(e.target.value); setMes(m); carregar(m, ano); }}>
               {MESES.map((nome, i) => <option key={nome} value={i + 1}>{nome}</option>)}
             </select>
           </div>
           <div className="campo">
-            <label>Ano</label>
-            <select value={ano} onChange={(e) => { const a = Number(e.target.value); setAno(a); carregar(mes, a); }}>
+            <label htmlFor="escala-ano">Ano</label>
+            <select id="escala-ano" value={ano} onChange={(e) => { const a = Number(e.target.value); setAno(a); carregar(mes, a); }}>
               {[agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1].map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
@@ -481,7 +481,7 @@ export default function EscalaPage() {
               <span className="sp">SP</span>
               <span className="assinatura"> | MINISTÉRIO PÚBLICO DO ESTADO DE SÃO PAULO</span>
             </div>
-            <h3 style={{ marginTop: 0 }}>Carga ponderada por promotor e grupo</h3>
+            <h2 style={{ marginTop: 0 }}>Carga ponderada por promotor e grupo</h2>
             <p className="muted">O saldo anterior acumula os meses já escalados e é considerado na distribuição deste mês. Carga maior agora resulta em compensação nos meses seguintes.</p>
             <div className="emissao-print" style={{ marginBottom: 8 }}>
               CARGA PONDERADA — {MESES[mes - 1].toUpperCase()}/{ano} · Emitida em {emitidaEm || "—"} · Status:{" "}

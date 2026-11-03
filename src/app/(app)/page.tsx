@@ -21,7 +21,7 @@ export default async function Dashboard() {
 
   return (
     <div>
-      <h2 className="page-titulo" data-tour="/-titulo">Dashboard</h2>
+      <h1 className="page-titulo" data-tour="/-titulo">Dashboard</h1>
       <div className="cards" aria-label="Resumo">
         <div className="card">
           <div className="valor">{promotores}</div>
@@ -38,7 +38,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3 className="painel-titulo">{chefe ? "Comece por aqui" : "Atalhos"}</h3>
+        <h2 className="painel-titulo">{chefe ? "Comece por aqui" : "Atalhos"}</h2>
         {chefe ? (
           <ol className="atalhos-lista">
             <li>
@@ -61,7 +61,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3 className="painel-titulo">Escalas recentes</h3>
+        <h2 className="painel-titulo">Escalas recentes</h2>
         {escalas.length === 0 ? (
           <p className="muted">Nenhuma escala gerada ainda.</p>
         ) : (

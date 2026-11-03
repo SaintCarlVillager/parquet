@@ -56,7 +56,7 @@ export default function GradeView() {
 
   return (
     <div>
-      <h2 data-tour="grade-titulo">Grade de posições</h2>
+      <h1 className="page-titulo" data-tour="grade-titulo">Grade de posições</h1>
       <p className="muted">
         Define quais posições existem em cada dia da semana (padrão semanal). Para ligar/desligar posições em
         datas específicas, use a aba <a href="/excecoes">Exceções</a>.
@@ -67,16 +67,17 @@ export default function GradeView() {
       {msg && <p className="sucesso">{msg}</p>}
 
       <div className="panel" data-tour="grade-grade">
-        <h3 style={{ marginTop: 0 }}>Carga ponderada por grupo</h3>
+        <h2 style={{ marginTop: 0 }}>Carga ponderada por grupo</h2>
         <p className="muted" style={{ marginTop: -6 }}>
           A distribuição equilibra três cargas separadas: cada promotor é comparado aos demais dentro de cada grupo.
         </p>
         <div className="linha">
           {grupos.map((g) => (
             <div className="campo" key={g.grupo}>
-              <label>{g.nome}</label>
+              {chefe ? <label htmlFor={`grade-peso-${g.grupo}`}>{g.nome}</label> : <span className="rotulo-campo">{g.nome}</span>}
               {chefe ? (
                 <input
+                  id={`grade-peso-${g.grupo}`}
                   type="number"
                   step="0.5"
                   value={g.peso}
@@ -114,6 +115,7 @@ export default function GradeView() {
                       checked={p.codigo === "C" ? true : grade.has(`${dia}|${p.id}`)}
                       disabled={!chefe || p.codigo === "C"}
                       title={p.codigo === "C" ? "Custódia é fixa em todos os dias úteis (preenchimento manual)" : undefined}
+                      aria-label={`${p.codigo} — ${DIAS_SEMANA[dia]}`}
                       onChange={() => toggle(dia, p.id)}
                     />
                   </td>

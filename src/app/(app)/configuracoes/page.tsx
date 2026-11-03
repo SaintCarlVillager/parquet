@@ -10,11 +10,11 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div>
-      <h2 data-tour="configuracoes-titulo">Configurações</h2>
+      <h1 className="page-titulo" data-tour="configuracoes-titulo">Configurações</h1>
       <AcoesExcel chefe={chefe} />
       {chefe && (
         <div className="panel">
-          <h3 style={{ marginTop: 0 }}>Manutenção</h3>
+          <h2 style={{ marginTop: 0 }}>Manutenção</h2>
           <p className="muted">Apague as escalas e suas designações para recomeçar a geração. Cadastros, regras, grade, feriados, portarias e usuários serão preservados.</p>
           <LimparEscalasBotao />
         </div>

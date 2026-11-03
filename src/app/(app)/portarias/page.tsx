@@ -110,7 +110,7 @@ export default function PortariasPage() {
 
   return (
     <div>
-      <h2 data-tour="portarias-titulo">Portarias de cobertura</h2>
+      <h1 className="page-titulo" data-tour="portarias-titulo">Portarias de cobertura</h1>
       <p className="muted" style={{ marginTop: -8 }}>
         Registre a portaria que designa quem cobre o promotor afastado, e como (Designado, Acumulação ou Auxílio).
         No período, o promotor afastado sai da escala e quem cobre passa a poder atuar nas varas dele.
@@ -124,22 +124,22 @@ export default function PortariasPage() {
 
       {chefe && (
       <div className="panel no-print">
-        <h3 style={{ marginTop: 0 }}>{form.id ? "Editar portaria" : "Nova portaria"}</h3>
+        <h2 style={{ marginTop: 0 }}>{form.id ? "Editar portaria" : "Nova portaria"}</h2>
         <div className="linha">
           <div className="campo">
-            <label>Nº da portaria (opcional)</label>
-            <input value={form.numero} size={18} placeholder="Ex.: RT 123/2026" onChange={(e) => setForm({ ...form, numero: e.target.value })} />
+            <label htmlFor="portarias-n-da-portaria-opcional">Nº da portaria (opcional)</label>
+            <input id="portarias-n-da-portaria-opcional" value={form.numero} size={18} placeholder="Ex.: RT 123/2026" onChange={(e) => setForm({ ...form, numero: e.target.value })} />
           </div>
           <div className="campo">
-            <label>Promotor afastado</label>
-            <select value={form.promotorAfastadoId} onChange={(e) => setForm({ ...form, promotorAfastadoId: e.target.value })}>
+            <label htmlFor="portarias-promotor-afastado">Promotor afastado</label>
+            <select id="portarias-promotor-afastado" value={form.promotorAfastadoId} onChange={(e) => setForm({ ...form, promotorAfastadoId: e.target.value })}>
               <option value="">Selecione…</option>
               {promotores.map((p) => <option key={p.id} value={p.id}>{p.apelido} — {p.nome}</option>)}
             </select>
           </div>
           <div className="campo">
-            <label>Quem cobre</label>
-            <select value={form.promotorCobridorId} onChange={(e) => setForm({ ...form, promotorCobridorId: e.target.value })}>
+            <label htmlFor="portarias-quem-cobre">Quem cobre</label>
+            <select id="portarias-quem-cobre" value={form.promotorCobridorId} onChange={(e) => setForm({ ...form, promotorCobridorId: e.target.value })}>
               <option value="">— (sem designado)</option>
               {promotores.filter((p) => String(p.id) !== form.promotorAfastadoId).map((p) => (
                 <option key={p.id} value={p.id}>{p.apelido} — {p.nome}</option>
@@ -147,24 +147,24 @@ export default function PortariasPage() {
             </select>
           </div>
           <div className="campo">
-            <label>Modalidade</label>
-            <select value={form.modalidade} onChange={(e) => setForm({ ...form, modalidade: e.target.value })}>
+            <label htmlFor="portarias-modalidade">Modalidade</label>
+            <select id="portarias-modalidade" value={form.modalidade} onChange={(e) => setForm({ ...form, modalidade: e.target.value })}>
               {MODALIDADES_PORTARIA.map((m) => <option key={m} value={m}>{ROTULO_MODALIDADE[m] ?? m}</option>)}
             </select>
           </div>
         </div>
         <div className="linha">
           <div className="campo">
-            <label>Início</label>
-            <input type="date" value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.target.value })} />
+            <label htmlFor="portarias-inicio">Início</label>
+            <input id="portarias-inicio" type="date" value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.target.value })} />
           </div>
           <div className="campo">
-            <label>Fim</label>
-            <input type="date" value={form.fim} onChange={(e) => setForm({ ...form, fim: e.target.value })} />
+            <label htmlFor="portarias-fim">Fim</label>
+            <input id="portarias-fim" type="date" value={form.fim} onChange={(e) => setForm({ ...form, fim: e.target.value })} />
           </div>
           <div className="campo">
-            <label>Observação (opcional)</label>
-            <input value={form.observacao} size={30} onChange={(e) => setForm({ ...form, observacao: e.target.value })} />
+            <label htmlFor="portarias-observacao-opcional">Observação (opcional)</label>
+            <input id="portarias-observacao-opcional" value={form.observacao} size={30} onChange={(e) => setForm({ ...form, observacao: e.target.value })} />
           </div>
           <button className="btn" onClick={salvar} data-tour="portarias-nova">{form.id ? "Salvar alterações" : "Lançar"}</button>
           {form.id && <button className="btn secundario" onClick={() => setForm(FORM_VAZIO)}>Cancelar</button>}
@@ -180,7 +180,7 @@ export default function PortariasPage() {
       )}
       {gruposMes.map((g) => (
         <div className="panel" key={g.chave} data-tour="portarias-lista">
-          <h3 style={{ marginTop: 0 }}>{g.nome}</h3>
+          <h2 style={{ marginTop: 0 }}>{g.nome}</h2>
           <table>
             <thead>
               <tr>
@@ -190,7 +190,7 @@ export default function PortariasPage() {
                 <th>Quem cobre</th>
                 <th>Modalidade</th>
                 <th>Observação</th>
-                {chefe && <th className="no-print"></th>}
+                {chefe && <th className="no-print"><span className="sr-only">Ações</span></th>}
               </tr>
             </thead>
             <tbody>
