@@ -151,7 +151,7 @@ antes de qualquer `npx vercel`:
 git status --short        # conferir que so ha arquivos esperados
 git diff --check          # sem erros de espaco
 node scripts/verifica-higiene.mjs
-npm audit --omit=dev      # dependencias de producao sem vulnerabilidades
+node scripts/audita-dependencias.mjs  # npm audit --omit=dev com excecoes datadas
 ```
 
 A verificação de higiene falha (exit != 0) se houver:
@@ -166,8 +166,14 @@ Arquivos sob `tests/` e `fixtures/` sao ignorados na varredura de conteudo
 (contem amostras intencionais para os testes), mas continuam checados por nome.
 
 O CI (`.github/workflows/ci.yml`) roda `verify` (testes + typecheck + build) e
-o job `higiene` (verifica-higiene + `npm audit --omit=dev` + `git diff --check`)
+o job `higiene` (verifica-higiene + `scripts/audita-dependencias.mjs` + `git diff --check`)
 a cada push e pull request.
+
+`scripts/audita-dependencias.mjs` roda `npm audit --omit=dev --json` e falha em
+qualquer advisory de producao, exceto os listados em `scripts/audit-excecoes.json`
+(GHSA + pacote + motivo + data `expira`). Excecao vencida volta a bloquear o CI;
+excecao sem advisory correspondente gera aviso para ser removida. Toda excecao
+nova exige justificativa de por que o caminho vulneravel nao e alcancavel.
 
 Nao commitar `.env*`; apenas `.env.example` e permitido se criado. O `.env`
 local vem de `npx vercel env pull .env` (Development) e nunca vai para o git.
