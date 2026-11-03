@@ -39,13 +39,13 @@ export default function FeriadosView() {
 
   return (
     <div>
-      <h2 data-tour="feriados-titulo">Feriados</h2>
+      <h1 className="page-titulo" data-tour="feriados-titulo">Feriados</h1>
       {erro && <p className="erro">{erro}</p>}
       <div className="panel">
         <div className="linha">
           <div className="campo">
-            <label>Ano</label>
-            <select value={ano} onChange={(e) => { setAno(Number(e.target.value)); setForm({ data: "", nome: "" }); }}>
+            <label htmlFor="feriados-ano">Ano</label>
+            <select id="feriados-ano" value={ano} onChange={(e) => { setAno(Number(e.target.value)); setForm({ data: "", nome: "" }); }}>
               {[anoAtual - 1, anoAtual, anoAtual + 1].map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
@@ -55,12 +55,12 @@ export default function FeriadosView() {
         <div className="panel">
           <div className="linha">
             <div className="campo">
-              <label>Data</label>
-              <input type="date" min={`${ano}-01-01`} max={`${ano}-12-31`} value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} />
+              <label htmlFor="feriados-data">Data</label>
+              <input id="feriados-data" type="date" min={`${ano}-01-01`} max={`${ano}-12-31`} value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} />
             </div>
             <div className="campo">
-              <label>Descrição</label>
-              <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} size={40} />
+              <label htmlFor="feriados-descricao">Descrição</label>
+              <input id="feriados-descricao" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} size={40} />
             </div>
             <button className="btn" onClick={salvar} data-tour="feriados-novo">Adicionar</button>
           </div>
@@ -69,7 +69,7 @@ export default function FeriadosView() {
       <div className="panel">
         <table>
           <thead>
-            <tr><th>Data</th><th>Descrição</th>{chefe && <th></th>}</tr>
+            <tr><th>Data</th><th>Descrição</th>{chefe && <th><span className="sr-only">Ações</span></th>}</tr>
           </thead>
           <tbody>
             {lista.map((f) => (

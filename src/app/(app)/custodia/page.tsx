@@ -136,7 +136,7 @@ export default function CustodiaPage() {
 
   return (
     <div>
-      <h2 data-tour="custodia-titulo">Custódia</h2>
+      <h1 className="page-titulo" data-tour="custodia-titulo">Custódia</h1>
       <p className="muted">
         Lance aqui o PJ responsável pelas audiências de custódia de cada dia útil. Primeiro crie o esqueleto da
         escala mensal na aba Escala.
@@ -147,14 +147,14 @@ export default function CustodiaPage() {
       <div className="panel">
         <div className="linha">
           <div className="campo">
-            <label>Mês</label>
-            <select value={mes} onChange={(e) => { const m = Number(e.target.value); setMes(m); carregar(m, ano); }}>
+            <label htmlFor="custodia-mes">Mês</label>
+            <select id="custodia-mes" value={mes} onChange={(e) => { const m = Number(e.target.value); setMes(m); carregar(m, ano); }}>
               {MESES.map((nome, i) => <option key={nome} value={i + 1}>{nome}</option>)}
             </select>
           </div>
           <div className="campo">
-            <label>Ano</label>
-            <select value={ano} onChange={(e) => { const a = Number(e.target.value); setAno(a); carregar(mes, a); }}>
+            <label htmlFor="custodia-ano">Ano</label>
+            <select id="custodia-ano" value={ano} onChange={(e) => { const a = Number(e.target.value); setAno(a); carregar(mes, a); }}>
               {[agora.getFullYear() - 1, agora.getFullYear(), agora.getFullYear() + 1].map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}

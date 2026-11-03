@@ -110,7 +110,7 @@ export default function RegrasPage() {
 
   return (
     <div>
-      <h2 data-tour="regras-titulo">Regras</h2>
+      <h1 className="page-titulo" data-tour="regras-titulo">Regras</h1>
       <p className="muted" style={{ marginTop: -8 }}>
         Regras reutilizáveis de dias da semana, aplicadas por grupo de posições. Vincule cada regra a um ou mais
         promotores; elas restringem a geração automática e a edição manual (promotores SUBSTITUTO não as recebem).
@@ -124,11 +124,11 @@ export default function RegrasPage() {
 
       {chefe && (
       <div className="panel no-print">
-        <h3 style={{ marginTop: 0 }}>{form.id ? "Editar regra" : "Nova regra"}</h3>
+        <h2 style={{ marginTop: 0 }}>{form.id ? "Editar regra" : "Nova regra"}</h2>
         <div className="linha">
           <div className="campo">
-            <label>Nome</label>
-            <input
+            <label htmlFor="regras-nome">Nome</label>
+            <input id="regras-nome"
               value={form.nome}
               size={36}
               placeholder="Ex.: Varas somente ter/qui"
@@ -136,15 +136,15 @@ export default function RegrasPage() {
             />
           </div>
           <div className="campo">
-            <label>Tipo</label>
-            <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+            <label htmlFor="regras-tipo">Tipo</label>
+            <select id="regras-tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
               <option value="SOMENTE">Somente nestes dias</option>
               <option value="EXCETO">Exceto nestes dias</option>
             </select>
           </div>
         </div>
-        <div className="campo" style={{ marginBottom: 12 }}>
-          <label>Dias da semana</label>
+        <fieldset className="campo grupo-campos">
+          <legend>Dias da semana</legend>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {DIAS_ORDEM.map((d) => (
               <label key={d} style={{ display: "flex", gap: 4, alignItems: "center", fontWeight: "normal" }}>
@@ -157,9 +157,9 @@ export default function RegrasPage() {
               </label>
             ))}
           </div>
-        </div>
-        <div className="campo" style={{ marginBottom: 12 }}>
-          <label>Grupos afetados {form.grupos.length === 0 && <em className="muted">(nenhum marcado = todos)</em>}</label>
+        </fieldset>
+        <fieldset className="campo grupo-campos">
+          <legend>Grupos afetados {form.grupos.length === 0 && <em className="muted">(nenhum marcado = todos)</em>}</legend>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {GRUPOS.map((g) => (
               <label key={g.chave} style={{ display: "flex", gap: 4, alignItems: "center", fontWeight: "normal" }}>
@@ -172,10 +172,10 @@ export default function RegrasPage() {
               </label>
             ))}
           </div>
-        </div>
-        <div className="campo" style={{ marginBottom: 12 }}>
-          <label>Promotores vinculados</label>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", maxHeight: 180, overflowY: "auto", border: "1px solid var(--borda)", padding: 10, borderRadius: 6 }}>
+        </fieldset>
+        <fieldset className="campo grupo-campos">
+          <legend>Promotores vinculados</legend>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", maxHeight: 180, overflowY: "auto", border: "1px solid var(--border)", padding: 10, borderRadius: 6 }}>
             {promotores.map((p) => (
               <label key={p.id} style={{ display: "flex", gap: 4, alignItems: "center", fontWeight: "normal" }} title={p.nome}>
                 <input
@@ -187,7 +187,7 @@ export default function RegrasPage() {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn" onClick={salvar} data-tour="regras-nova">{form.id ? "Salvar alterações" : "Criar regra"}</button>
           {form.id && (
@@ -209,7 +209,7 @@ export default function RegrasPage() {
               <th style={{ textAlign: "left" }}>Regra</th>
               <th style={{ textAlign: "left" }}>Condição</th>
               <th style={{ textAlign: "left" }}>Promotores vinculados</th>
-              {chefe && <th className="no-print"></th>}
+              {chefe && <th className="no-print"><span className="sr-only">Ações</span></th>}
             </tr>
           </thead>
           <tbody>

@@ -141,9 +141,42 @@ export function chaveVisita(email: string): string {
 }
 
 export function jaVisitou(storage: Pick<Storage, "getItem">, email: string): boolean {
-  return storage.getItem(chaveVisita(email)) === "1";
+  try {
+    return storage.getItem(chaveVisita(email)) === "1";
+  } catch {
+    return true;
+  }
 }
 
 export function marcarVisitado(storage: Pick<Storage, "setItem">, email: string): void {
-  storage.setItem(chaveVisita(email), "1");
+  try {
+    storage.setItem(chaveVisita(email), "1");
+  } catch {}
+}
+
+export interface AreaAlvo {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+export interface PosicaoTooltip {
+  top: number;
+  left: number;
+  maxWidth: number;
+}
+
+const LARGURA_TOOLTIP = 300;
+const MARGEM_TOOLTIP = 8;
+const ALTURA_RESERVADA_TOOLTIP = 120;
+
+export function posicionarTooltip(alvo: AreaAlvo, viewport: { largura: number; altura: number }): PosicaoTooltip {
+  const maxWidth = Math.min(LARGURA_TOOLTIP, viewport.largura - MARGEM_TOOLTIP * 2);
+  if (viewport.largura - (alvo.left + alvo.width) > LARGURA_TOOLTIP + 24) {
+    return { top: alvo.top, left: alvo.left + alvo.width + 12, maxWidth };
+  }
+  const top = Math.max(MARGEM_TOOLTIP, Math.min(alvo.top + alvo.height + 12, viewport.altura - ALTURA_RESERVADA_TOOLTIP));
+  const left = Math.max(MARGEM_TOOLTIP, Math.min(alvo.left, viewport.largura - maxWidth - MARGEM_TOOLTIP));
+  return { top, left, maxWidth };
 }

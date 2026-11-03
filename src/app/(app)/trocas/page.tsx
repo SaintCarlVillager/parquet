@@ -90,20 +90,20 @@ export default function TrocasPage() {
   }
 
   return <div>
-    <h2 data-tour="trocas-titulo">Trocas / Ajustes</h2>
+    <h1 className="page-titulo" data-tour="trocas-titulo">Trocas / Ajustes</h1>
     <p className="muted" style={{ marginTop: -8 }}>Troque ou preencha uma posição específica da escala sem alterar as regras da geração. Para uma posição vaga, selecione “Vaga sem candidato” como designado originalmente.</p>
     {erro && <p className="erro">{erro}</p>}
     {msg && <p className="ok">{msg}</p>}
     <div className="panel no-print" data-tour="trocas-lancar">
       <div className="linha">
-        <div className="campo"><label>Mês</label><select value={mes} onChange={(e) => setMes(Number(e.target.value))}>{MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></div>
-        <div className="campo"><label>Ano</label><select value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[ano - 1, ano, ano + 1].filter((v, i, a) => a.indexOf(v) === i).map((v) => <option key={v}>{v}</option>)}</select></div>
+        <div className="campo"><label htmlFor="trocas-mes">Mês</label><select id="trocas-mes" value={mes} onChange={(e) => setMes(Number(e.target.value))}>{MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></div>
+        <div className="campo"><label htmlFor="trocas-ano">Ano</label><select id="trocas-ano" value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[ano - 1, ano, ano + 1].filter((v, i, a) => a.indexOf(v) === i).map((v) => <option key={v}>{v}</option>)}</select></div>
         {podeEditar && <>
-          <div className="campo"><label>Dia</label><select value={data} onChange={(e) => setData(e.target.value)}><option value="">Selecione…</option>{[...new Set(opcoes.map((o) => o.data))].sort().map((d) => <option key={d} value={d}>{formatarDataBR(d)}</option>)}</select></div>
-          <div className="campo"><label>Posição</label><select value={posicaoId} onChange={(e) => setPosicaoId(e.target.value)}><option value="">Selecione…</option>{opcoesDoDia.map((o) => <option key={o.posicaoId} value={o.posicaoId}>{o.codigo} — {o.nome}</option>)}</select></div>
-          <div className="campo"><label>Designado originalmente</label><select value={origem} onChange={(e) => setOrigem(e.target.value)} disabled={!opcaoAtual}><option value="">Selecione…</option>{opcaoAtual?.promotorId === null && <option value="VAGA">Vaga sem candidato</option>}{opcaoAtual && opcaoAtual.promotorId !== null && <option value={opcaoAtual.promotorId}>{promotores.find((p) => p.id === opcaoAtual.promotorId)?.apelido}</option>}</select></div>
-          <div className="campo"><label>Quem assume</label><select value={destino} onChange={(e) => setDestino(e.target.value)}><option value="">Selecione…</option>{promotores.filter((p) => p.id !== opcaoAtual?.promotorId).map((p) => <option key={p.id} value={p.id}>{p.apelido} — {p.nome}</option>)}</select></div>
-          <div className="campo"><label>Observação</label><input value={observacao} onChange={(e) => setObservacao(e.target.value)} /></div>
+          <div className="campo"><label htmlFor="trocas-dia">Dia</label><select id="trocas-dia" value={data} onChange={(e) => setData(e.target.value)}><option value="">Selecione…</option>{[...new Set(opcoes.map((o) => o.data))].sort().map((d) => <option key={d} value={d}>{formatarDataBR(d)}</option>)}</select></div>
+          <div className="campo"><label htmlFor="trocas-posicao">Posição</label><select id="trocas-posicao" value={posicaoId} onChange={(e) => setPosicaoId(e.target.value)}><option value="">Selecione…</option>{opcoesDoDia.map((o) => <option key={o.posicaoId} value={o.posicaoId}>{o.codigo} — {o.nome}</option>)}</select></div>
+          <div className="campo"><label htmlFor="trocas-designado-originalmente">Designado originalmente</label><select id="trocas-designado-originalmente" value={origem} onChange={(e) => setOrigem(e.target.value)} disabled={!opcaoAtual}><option value="">Selecione…</option>{opcaoAtual?.promotorId === null && <option value="VAGA">Vaga sem candidato</option>}{opcaoAtual && opcaoAtual.promotorId !== null && <option value={opcaoAtual.promotorId}>{promotores.find((p) => p.id === opcaoAtual.promotorId)?.apelido}</option>}</select></div>
+          <div className="campo"><label htmlFor="trocas-quem-assume">Quem assume</label><select id="trocas-quem-assume" value={destino} onChange={(e) => setDestino(e.target.value)}><option value="">Selecione…</option>{promotores.filter((p) => p.id !== opcaoAtual?.promotorId).map((p) => <option key={p.id} value={p.id}>{p.apelido} — {p.nome}</option>)}</select></div>
+          <div className="campo"><label htmlFor="trocas-observacao">Observação</label><input id="trocas-observacao" value={observacao} onChange={(e) => setObservacao(e.target.value)} /></div>
           <button className="btn" onClick={salvar} disabled={!data || !posicaoId || !origem || !destino}>Lançar ajuste</button>
         </>}
       </div>
@@ -111,7 +111,7 @@ export default function TrocasPage() {
       {!carregando && !opcoes.length && <p className="muted" style={{ marginBottom: 0 }}>Não há posições disponíveis neste mês. Gere a escala antes de lançar ajustes.</p>}
     </div>
     <div className="panel" data-tour="trocas-lista">
-      <h3 style={{ marginTop: 0 }}>Trocas / Ajustes lançados</h3>
+      <h2 style={{ marginTop: 0 }}>Trocas / Ajustes lançados</h2>
        {carregando ? <p className="muted">Carregando ajustes…</p> : !trocas.length ? <p className="muted">Nenhum ajuste lançado neste mês.</p> : <table><thead><tr><th>Dia</th><th>Posição</th><th>Designado originalmente</th><th>Quem assume</th><th>Observação</th>{podeEditar && <th className="no-print" />}</tr></thead><tbody>{trocas.map((t) => <tr key={t.id}><td>{formatarDataBR(t.data)}</td><td><strong>{t.posicao?.codigo ?? "—"}</strong> <span className="muted">{t.posicao?.nome}</span></td><td>{t.promotorOrigem ? <><strong>{t.promotorOrigem.apelido}</strong> <span className="muted">{t.promotorOrigem.nome}</span></> : <em className="muted">vaga sem candidato</em>}</td><td><strong>{t.promotorDestino.apelido}</strong> <span className="muted">{t.promotorDestino.nome}</span></td><td className="muted">{t.observacao}</td>{podeEditar && <td className="no-print"><button className="btn mini perigo" onClick={() => excluir(t)}>Excluir</button></td>}</tr>)}</tbody></table>}
     </div>
   </div>;

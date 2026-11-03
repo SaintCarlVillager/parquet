@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useSessao } from "@/app/components/SessaoProvider";
-import { jaVisitou, marcarVisitado, passosDaRota, proximoIndice } from "@/lib/tour";
+import { jaVisitou, marcarVisitado, passosDaRota, posicionarTooltip, proximoIndice } from "@/lib/tour";
 
 interface TourControle {
   abrirTour: () => void;
@@ -24,9 +24,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [aberto, setAberto] = useState(false);
   const [indice, setIndice] = useState(0);
   const [pos, setPos] = useState<Pos | null>(null);
-  const [primeiraVisita, setPrimeiraVisita] = useState<boolean>(() =>
-    typeof window !== "undefined" && !!email ? !jaVisitou(window.localStorage, email) : false
-  );
+  const [primeiraVisita, setPrimeiraVisita] = useState(false);
   const abriuAuto = useRef(false);
 
   const passos = useMemo(() => passosDaRota(pathname, papel), [pathname, papel]);
@@ -35,7 +33,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (abriuAuto.current || !email || typeof window === "undefined") return;
     abriuAuto.current = true;
-    if (!jaVisitou(window.localStorage, email)) setAberto(true);
+    if (!jaVisitou(window.localStorage, email)) {
+      setPrimeiraVisita(true);
+      setAberto(true);
+    }
   }, [email]);
 
   useEffect(() => {
@@ -130,11 +131,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const tooltip = useMemo(() => {
     if (!focado || !pos) return undefined;
-    const largura = 300;
-    const acimaDireita = typeof window !== "undefined" && window.innerWidth - (pos.left + pos.width) > largura + 24;
-    if (acimaDireita) return { top: pos.top, left: pos.left + pos.width + 12, maxWidth: largura };
-    const top = Math.max(8, Math.min(pos.top + pos.height + 12, (typeof window !== "undefined" ? window.innerHeight : 600) - 120));
-    return { top, left: pos.left, maxWidth: largura };
+    const viewport = typeof window !== "undefined" ? { largura: window.innerWidth, altura: window.innerHeight } : { largura: 1024, altura: 600 };
+    return posicionarTooltip(pos, viewport);
   }, [focado, pos]);
 
   return (

@@ -98,7 +98,7 @@ export default function PromotoresPage() {
 
   return (
     <div>
-      <h2 data-tour="promotores-titulo">Promotores</h2>
+      <h1 className="page-titulo" data-tour="promotores-titulo">Promotores</h1>
       {erro && <p className="erro">{erro}</p>}
       {msg && <p className="sucesso">{msg}</p>}
       <div className="linha no-print" style={{ marginBottom: 14 }}>
@@ -136,7 +136,7 @@ export default function PromotoresPage() {
       </div>
       {chefe ? (
         <div className="panel no-print">
-          <h3 style={{ marginTop: 0 }}>Cargo administrativo</h3>
+          <h2 style={{ marginTop: 0 }}>Cargo administrativo</h2>
           <p className="muted" style={{ marginTop: -6 }}>
             O Secretário faz no máximo 1 audiência por semana. Na ausência dele (portaria), o Sub-secretário
             assume a função (1 audiência/semana) e o cobridor da portaria fica com as demais funções do cargo,
@@ -145,8 +145,8 @@ export default function PromotoresPage() {
           {msgCargos && <p className="sucesso">{msgCargos}</p>}
           <div className="linha">
             <div className="campo">
-              <label>PJ Secretário</label>
-              <select
+              <label htmlFor="promotores-pj-secretario">PJ Secretário</label>
+              <select id="promotores-pj-secretario"
                 value={cargos.SECRETARIO ?? ""}
                 onChange={(e) => setCargos({ ...cargos, SECRETARIO: e.target.value ? Number(e.target.value) : null })}
               >
@@ -157,8 +157,8 @@ export default function PromotoresPage() {
               </select>
             </div>
             <div className="campo">
-              <label>PJ Sub-secretário</label>
-              <select
+              <label htmlFor="promotores-pj-sub-secretario">PJ Sub-secretário</label>
+              <select id="promotores-pj-sub-secretario"
                 value={cargos.SUBSECRETARIO ?? ""}
                 onChange={(e) => setCargos({ ...cargos, SUBSECRETARIO: e.target.value ? Number(e.target.value) : null })}
               >
@@ -173,10 +173,10 @@ export default function PromotoresPage() {
         </div>
       ) : (
         <div className="panel no-print">
-          <h3 style={{ marginTop: 0 }}>Cargo administrativo</h3>
+          <h2 style={{ marginTop: 0 }}>Cargo administrativo</h2>
           <div className="linha">
             <div className="campo">
-              <label>PJ Secretário</label>
+              <span className="rotulo-campo">PJ Secretário</span>
               <div style={{ paddingTop: 6 }}>
                 {(() => {
                   const p = lista.find((x) => x.id === cargos.SECRETARIO);
@@ -185,7 +185,7 @@ export default function PromotoresPage() {
               </div>
             </div>
             <div className="campo">
-              <label>PJ Sub-secretário</label>
+              <span className="rotulo-campo">PJ Sub-secretário</span>
               <div style={{ paddingTop: 6 }}>
                 {(() => {
                   const p = lista.find((x) => x.id === cargos.SUBSECRETARIO);
@@ -200,20 +200,20 @@ export default function PromotoresPage() {
       <div className="panel no-print">
         <div className="linha">
           <div className="campo">
-            <label>Nome completo</label>
-            <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} size={40} />
+            <label htmlFor="promotores-nome-completo">Nome completo</label>
+            <input id="promotores-nome-completo" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} size={40} />
           </div>
           <div className="campo">
-            <label>Apelido (na escala)</label>
-            <input value={form.apelido} onChange={(e) => setForm({ ...form, apelido: e.target.value })} />
+            <label htmlFor="promotores-apelido-na-escala">Apelido (na escala)</label>
+            <input id="promotores-apelido-na-escala" value={form.apelido} onChange={(e) => setForm({ ...form, apelido: e.target.value })} />
           </div>
           <div className="campo">
-            <label>E-mail</label>
-            <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} size={30} />
+            <label htmlFor="promotores-e-mail">E-mail</label>
+            <input id="promotores-e-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} size={30} />
           </div>
           <div className="campo">
-            <label>Tipo</label>
-            <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+            <label htmlFor="promotores-tipo">Tipo</label>
+            <select id="promotores-tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
               <option value="TITULAR">Titular</option>
               <option value="AUXILIAR">Auxiliar</option>
               <option value="REGIONAL">Regional</option>
@@ -221,8 +221,8 @@ export default function PromotoresPage() {
             </select>
           </div>
           <div className="campo">
-            <label>Atuação</label>
-            <select value={form.atuacao} onChange={(e) => setForm({ ...form, atuacao: e.target.value })}>
+            <label htmlFor="promotores-atuacao">Atuação</label>
+            <select id="promotores-atuacao" value={form.atuacao} onChange={(e) => setForm({ ...form, atuacao: e.target.value })}>
               {ATUACOES.map((a) => (
                 <option key={a.valor} value={a.valor}>{a.rotulo}</option>
               ))}
@@ -237,8 +237,8 @@ export default function PromotoresPage() {
             </button>
           )}
         </div>
-        <div className="campo" style={{ marginTop: 4 }}>
-          <label>Varas de atuação em audiências (deixe todas desmarcadas para atuar em qualquer vara)</label>
+        <fieldset className="campo grupo-campos" style={{ marginTop: 4 }}>
+          <legend>Varas de atuação em audiências (deixe todas desmarcadas para atuar em qualquer vara)</legend>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             {VARAS.map((v) => (
               <label key={v} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 0, color: "var(--text)" }}>
@@ -256,7 +256,7 @@ export default function PromotoresPage() {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
         <div className="campo" style={{ marginTop: 8 }}>
           <label htmlFor="promotor-observacoes">Observações (máximo de 2.000 caracteres)</label>
           <textarea id="promotor-observacoes" rows={3} maxLength={2000} value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} />
@@ -284,7 +284,7 @@ export default function PromotoresPage() {
               <th>Varas</th>
               <th>Observações</th>
               <th>Ativo</th>
-              {chefe && <th className="no-print"></th>}
+              {chefe && <th className="no-print"><span className="sr-only">Ações</span></th>}
             </tr>
           </thead>
           <tbody>

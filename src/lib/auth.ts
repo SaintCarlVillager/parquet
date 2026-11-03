@@ -106,9 +106,12 @@ export async function exigir(req: Request, papeis: Papel[]): Promise<Sessao | { 
   return s;
 }
 
+const HASH_FICTICIO = `${"0".repeat(32)}:${"0".repeat(128)}`;
+
 export async function autenticar(email: string, senha: string): Promise<Sessao | null> {
   const u = await db.usuarioPapel.findUnique({ where: { email: email.trim().toLowerCase() } });
-  if (!u?.senhaHash || !conferirSenha(senha, u.senhaHash)) return null;
+  const confere = conferirSenha(senha, u?.senhaHash || HASH_FICTICIO);
+  if (!u?.senhaHash || !confere) return null;
   if (u.papel !== "CHEFE" && u.papel !== "OFICIAL" && u.papel !== "PROMOTOR") return null;
   return { email: u.email, papel: u.papel, nome: u.nome ?? u.email, sessaoVersao: u.sessaoVersao, exp: 0 };
 }

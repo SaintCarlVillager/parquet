@@ -38,7 +38,7 @@ export default function LoginPage() {
   const rotuloAmbiente = { local: "DEV LOCAL", preview: "PREVIEW", production: "PRODUÇÃO" }[ambiente];
 
   return (
-    <div className="login-fundo">
+    <main className="login-fundo">
       <form
         id="conteudo-principal"
         className="login-caixa"
@@ -92,6 +92,6 @@ export default function LoginPage() {
         </button>
         <span className={`badge-ambiente ${ambiente}`}>{rotuloAmbiente}</span>
       </form>
-    </div>
+    </main>
   );
 }

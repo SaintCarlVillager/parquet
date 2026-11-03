@@ -70,7 +70,7 @@ export default function UsuariosView() {
 
   return (
     <div>
-      <h2 data-tour="usuarios-titulo">Usuários e acessos</h2>
+      <h1 className="page-titulo" data-tour="usuarios-titulo">Usuários e acessos</h1>
       <p className="muted" style={{ marginTop: -8 }}>
         Conceda acesso ao sistema e defina o papel de cada servidor. Os três papéis: Oficial de Promotoria Chefe
         (tudo, única edição), Oficial de Promotoria (consulta todas as telas e lança trocas vinculadas) e Promotor de Justiça
@@ -80,20 +80,20 @@ export default function UsuariosView() {
       {msg && <p className="ok">{msg}</p>}
 
       <div className="panel">
-        <h3 style={{ marginTop: 0 }}>{editando ? "Editar acesso" : "Conceder acesso"}</h3>
+        <h2 style={{ marginTop: 0 }}>{editando ? "Editar acesso" : "Conceder acesso"}</h2>
         <form onSubmit={salvar}>
           <div className="linha">
             <div className="campo">
-              <label>E-mail (@mpsp.mp.br)</label>
-              <input type="email" size={26} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={!!editando} required />
+              <label htmlFor="usuarios-e-mail-mpsp-mp-br">E-mail (@mpsp.mp.br)</label>
+              <input id="usuarios-e-mail-mpsp-mp-br" type="email" size={26} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={!!editando} required />
             </div>
             <div className="campo">
-              <label>Nome</label>
-              <input size={26} value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+              <label htmlFor="usuarios-nome">Nome</label>
+              <input id="usuarios-nome" size={26} value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
             </div>
             <div className="campo">
-              <label>Papel</label>
-              <select value={form.papel} onChange={(e) => setForm({ ...form, papel: e.target.value as Usuario["papel"] })}>
+              <label htmlFor="usuarios-papel">Papel</label>
+              <select id="usuarios-papel" value={form.papel} onChange={(e) => setForm({ ...form, papel: e.target.value as Usuario["papel"] })}>
                 {PAPEIS.map((p) => (
                   <option key={p.v} value={p.v}>
                     {p.rotulo}
@@ -102,15 +102,15 @@ export default function UsuariosView() {
               </select>
             </div>
             {form.papel === "PROMOTOR" && <div className="campo">
-              <label>Oficial vinculado</label>
-              <select value={form.oficialEmail} onChange={(e) => setForm({ ...form, oficialEmail: e.target.value })}>
+              <label htmlFor="usuarios-oficial-vinculado">Oficial vinculado</label>
+              <select id="usuarios-oficial-vinculado" value={form.oficialEmail} onChange={(e) => setForm({ ...form, oficialEmail: e.target.value })}>
                 <option value="">Nenhum</option>
                 {oficiais.map((o) => <option key={o.email} value={o.email}>{o.nome || o.email}</option>)}
               </select>
             </div>}
             <div className="campo">
-              <label>{editando ? "Nova senha (opcional)" : "Senha"}</label>
-              <input type="password" minLength={8} value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} required={!editando} />
+              <label htmlFor="usuarios-senha">{editando ? "Nova senha (opcional)" : "Senha"}</label>
+              <input id="usuarios-senha" type="password" autoComplete="new-password" minLength={8} value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} required={!editando} />
             </div>
           </div>
           <div className="linha">
@@ -128,7 +128,7 @@ export default function UsuariosView() {
       </div>
 
       <div className="panel" data-tour="usuarios-lista">
-        <h3 style={{ marginTop: 0 }}>Acessos concedidos ({usuarios.length})</h3>
+        <h2 style={{ marginTop: 0 }}>Acessos concedidos ({usuarios.length})</h2>
         <table>
           <thead>
             <tr>
@@ -137,7 +137,7 @@ export default function UsuariosView() {
               <th>Papel</th>
               <th>Oficial vinculado</th>
               <th>Senha</th>
-              <th></th>
+              <th><span className="sr-only">Ações</span></th>
             </tr>
           </thead>
           <tbody>
