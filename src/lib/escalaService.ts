@@ -10,7 +10,7 @@ import {
   type RegraInput,
   type VagaInput,
 } from "@/lib/gerador";
-import { diasDoMes, diaSemana } from "@/lib/datas";
+import { diasDoMes, diaSemana, janelaDoMes } from "@/lib/datas";
 import { cargaAnterior } from "@/lib/carga";
 
 export function deveLiberarReservaPjs(entrada: {
@@ -196,8 +196,7 @@ export async function gerarEscalaMes(ano: number, mes: number) {
     }
     vaga.prePromotorId = existente.promotorId;
   }
-  const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
-  const fim = `${mes === 12 ? ano + 1 : ano}-${String(mes === 12 ? 1 : mes + 1).padStart(2, "0")}-01`;
+  const { inicio, fim } = janelaDoMes(ano, mes);
   const trocas = await db.troca.findMany({
     where: { data: { gte: inicio, lt: fim }, posicaoId: { not: null } },
     select: { data: true, posicaoId: true },
@@ -279,5 +278,3 @@ export async function criarEsqueletoMes(ano: number, mes: number) {
   await inserirDesignacoes(novas);
   return escala;
 }
-
-export { estaDisponivel };

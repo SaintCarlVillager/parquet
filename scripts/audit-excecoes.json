@@ -1,0 +1,8 @@
+[
+  {
+    "id": "GHSA-g3hv-75wg-m249",
+    "pacote": "minimatch",
+    "motivo": "Transitivo via exceljs > archiver (glob@7, readdir-glob). O app so grava/le xlsx em memoria e nunca passa padrao de glob controlado pelo usuario ao minimatch. Override para minimatch 11 quebra glob@7 e npm audit fix --force rebaixa exceljs para 4.1.1. Reavaliar no vencimento.",
+    "expira": "2027-01-02"
+  }
+]

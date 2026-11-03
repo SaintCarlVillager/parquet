@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { db } from "@/lib/db";
-import { semanasDoMes, parseISODate, MESES } from "@/lib/datas";
+import { semanasDoMes, parseISODate, MESES, janelaDoMes } from "@/lib/datas";
 import { coberturaAtiva } from "@/lib/gerador";
 import { TODOS, exigir } from "@/lib/auth";
 import { inteiroPositivo } from "@/lib/validacao";
@@ -36,7 +36,8 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
   });
   if (!escala) return new Response("Escala não encontrada", { status: 404 });
 
-  const trocas = await db.troca.findMany({ where: { data: { gte: `${escala.ano}-${String(escala.mes).padStart(2, "0")}-01`, lt: `${escala.mes === 12 ? escala.ano + 1 : escala.ano}-${String(escala.mes === 12 ? 1 : escala.mes + 1).padStart(2, "0")}-01` } }, include: { promotorOrigem: true, promotorDestino: true } });
+  const { inicio, fim } = janelaDoMes(escala.ano, escala.mes);
+  const trocas = await db.troca.findMany({ where: { data: { gte: inicio, lt: fim } }, include: { promotorOrigem: true, promotorDestino: true } });
   const mascara = aplicarTrocas(escala.designacoes, trocas);
   const destinoPorId = new Map(trocas.map((t) => [t.promotorDestinoId, t.promotorDestino]));
   const origemPorChave = new Map(trocas.filter((t) => t.promotorOrigem).map((t) => [`${t.data}|${t.promotorOrigemId}`, t.promotorOrigem!.apelido]));
