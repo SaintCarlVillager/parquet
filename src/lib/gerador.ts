@@ -87,11 +87,13 @@ export function atuaNaVara(p: { varas?: number[] }, codigo: string): boolean {
   return p.varas.includes(vara);
 }
 
-export function coberturaAtiva(
-  p: PromotorInput,
+type Cobertura = PromotorInput["coberturas"][number];
+
+export function coberturaAtiva<T extends Cobertura>(
+  p: { coberturas?: readonly T[] },
   codigo: string,
   data: string
-): { inicio: string; fim: string; varas: number[]; regras?: RegraInput[]; afastadoId?: number; atuaAfastado?: string; modalidade?: string; afastadoAuxiliar?: boolean } | undefined {
+): T | undefined {
   const m = /^(\d)('?)$/.exec(codigo);
   if (!m) return undefined;
   const vara = Number(m[1]);

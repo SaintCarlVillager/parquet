@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { db } from "@/lib/db";
 import { semanasDoMes, parseISODate, MESES } from "@/lib/datas";
+import { coberturaAtiva } from "@/lib/gerador";
 import { TODOS, exigir } from "@/lib/auth";
 import { inteiroPositivo } from "@/lib/validacao";
 import { aplicarTrocas } from "@/lib/trocas";
@@ -94,18 +95,6 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
     ACUMULACAO: "acumulando",
     AUXILIO: "auxiliando",
   };
-  const cobrindoDe = (promotorId: number, data: string, codigo: string) => {
-    const m = /^(\d)('?)$/.exec(codigo);
-    if (!m) return null;
-    const vara = Number(m[1]);
-    const isAux = m[2] === "'";
-    for (const c of coberturasPorCobridor.get(promotorId) ?? []) {
-      if (c.inicio <= data && data <= c.fim && c.afastadoAuxiliar === isAux && (c.varas.length === 0 || c.varas.includes(vara))) {
-        return c;
-      }
-    }
-    return null;
-  };
   const rotuloCustodiaExport = (promotorId: number, data: string, codigo: string) => {
     if (codigo !== "C") return null;
     const afast = (afastamentosPorAfastado.get(promotorId) ?? []).find(
@@ -165,7 +154,7 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
         const des = porChave.get(`${diasUteis[i]}|${pos.id}`);
         const cell = ws.getCell(r, i + 2);
         if (des?.promotor && des.promotorId !== null) {
-          const cob = cobrindoDe(des.promotorId, des.data, pos.codigo);
+          const cob = coberturaAtiva({ coberturas: coberturasPorCobridor.get(des.promotorId) ?? [] }, pos.codigo, des.data);
           const rotuloC = rotuloCustodiaExport(des.promotorId, des.data, pos.codigo);
           const richText: ExcelJS.RichText[] = [
             { font: { bold: true, size: 10 }, text: des.promotor.apelido },
@@ -233,7 +222,7 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
   for (const d of designacoesFinais) {
     if (!d.promotorId || !d.promotor) continue;
     // A carga pertence ao cargo original quando a audiência é servida por cobertura.
-    const cob = cobrindoDe(d.promotorId, d.data, d.posicao.codigo);
+    const cob = coberturaAtiva({ coberturas: coberturasPorCobridor.get(d.promotorId) ?? [] }, d.posicao.codigo, d.data);
     const alvoId = cob?.afastadoId ?? d.promotorId;
     const c = carga.get(alvoId);
     if (!c) continue;

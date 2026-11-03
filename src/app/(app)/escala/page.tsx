@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { estaDisponivel, atuaEm, type PromotorInput } from "@/lib/gerador";
+import { coberturaAtiva, estaDisponivel, atuaEm, type PromotorInput } from "@/lib/gerador";
 import { DIAS_SEMANA, diaSemana, formatarDataBR, parseISODate, semanasDoMes } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { promotorLogadoId } from "@/lib/promotor-logado";
@@ -232,7 +232,8 @@ export default function EscalaPage() {
       if (!d.promotorId) continue;
       const g = grupoDe.get(d.posicaoId) ?? "AUDIENCIAS";
       // A carga da audiência pertence ao cargo original, mesmo quando servida por cobertura.
-      const cob = coberturaDe(promotorDe.get(d.promotorId), d.data, codigoDe.get(d.posicaoId) ?? "");
+      const promotor = promotorDe.get(d.promotorId);
+      const cob = promotor ? coberturaAtiva(promotor, codigoDe.get(d.posicaoId) ?? "", d.data) : undefined;
       const alvoId = cob?.afastadoId ?? d.promotorId;
       const rec = m.get(alvoId);
       if (!rec) continue;
@@ -556,30 +557,13 @@ export default function EscalaPage() {
   );
 }
 
-type Cobertura = { inicio: string; fim: string; varas: number[]; afastadoId?: number; modalidade?: string; afastadoAuxiliar?: boolean };
-
-function coberturaDe(p: { coberturas?: Cobertura[] } | undefined, data: string, codigo: string): Cobertura | undefined {
-  if (!p) return undefined;
-  const m = /^(\d)('?)$/.exec(codigo);
-  if (!m) return undefined;
-  const vara = Number(m[1]);
-  const isAux = m[2] === "'";
-  return (p.coberturas ?? []).find(
-    (c) =>
-      c.inicio <= data &&
-      data <= c.fim &&
-      (!!c.afastadoAuxiliar === isAux) &&
-      (!c.varas || c.varas.length === 0 || c.varas.includes(vara))
-  );
-}
-
 const ROTULO_COBERTURA: Record<string, string> = {
   DESIGNADO: "designado para",
   ACUMULACAO: "acumulando",
   AUXILIO: "auxiliando",
 };
 
-function rotuloCobertura(c: Cobertura | undefined, apelido: string): string {
+function rotuloCobertura(c: { modalidade?: string } | undefined, apelido: string): string {
   if (!c) return "";
   return `${ROTULO_COBERTURA[c.modalidade ?? ""] ?? "cobrindo"} ${apelido}`;
 }
@@ -640,7 +624,7 @@ function CellSelect({
     atual?.tipo === "SUBSTITUTO" ? " · Substituto" : atual?.tipo === "AUXILIAR" ? " · Auxiliar" : atual?.tipo === "REGIONAL" ? " · Regional" : "";
   const cobrindo = (() => {
     if (!atual) return null;
-    const cob = coberturaDe(atual, data, codigo);
+    const cob = coberturaAtiva(atual, codigo, data);
     if (!cob) return null;
     return { apelido: promotores.find((p) => p.id === cob.afastadoId)?.apelido ?? null, cob };
   })();
