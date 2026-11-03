@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { estaDisponivel, atuaEm, type PromotorInput } from "@/lib/gerador";
-import { DIAS_SEMANA, diaSemana, formatarDataBR, parseISODate, semanasDoMes } from "@/lib/datas";
+import { DIAS_SEMANA, MESES, diaSemana, formatarDataBR, parseISODate, semanasDoMes } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { promotorLogadoId } from "@/lib/promotor-logado";
 import { HttpError, httpJson, mensagemHttp } from "@/lib/http";
@@ -23,8 +23,6 @@ interface Payload {
   excecoes: { id: number; data: string; posicaoId: number; ativa: boolean }[];
   saldoAnterior: Record<string, Record<string, number>>;
 }
-
-const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function EscalaPage() {
   const { papel, email } = useSessao();

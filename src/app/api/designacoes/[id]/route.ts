@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { estaDisponivel, atuaEm, atuaNaVara } from "@/lib/gerador";
-import { segundaDe } from "@/lib/datas";
+import { parseISODate, segundaDe, toISODate } from "@/lib/datas";
 import { EDICAO, exigir } from "@/lib/auth";
 import { inteiroPositivo, lerObjeto } from "@/lib/validacao";
 import { withApiError } from "@/lib/errosApi";
@@ -170,8 +170,10 @@ async function patchHandler(req: Request, { params }: { params: Promise<{ id: st
         limitado = periodos.some((c) => c.inicio <= designacao.data && designacao.data <= c.fim);
       }
       if (limitado) {
-        const semana = segundaDe(designacao.data);
-        const [d1, d2] = [semana, new Date(new Date(semana + "T00:00:00").getTime() + 6 * 86400000).toISOString().slice(0, 10)];
+        const d1 = segundaDe(designacao.data);
+        const domingo = parseISODate(d1);
+        domingo.setDate(domingo.getDate() + 6);
+        const d2 = toISODate(domingo);
         const outras = await db.designacao.count({
           where: {
             escalaId: designacao.escalaId,

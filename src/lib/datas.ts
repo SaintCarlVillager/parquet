@@ -33,6 +33,13 @@ export function diasDoMes(ano: number, mes: number): string[] {
   return out;
 }
 
+export function janelaDoMes(ano: number, mes: number): { inicio: string; fim: string } {
+  return {
+    inicio: toISODate(new Date(ano, mes - 1, 1)),
+    fim: toISODate(new Date(ano, mes, 1)),
+  };
+}
+
 function diaUtilNoMes(iso: string, ano: number, mes: number): boolean {
   const d = parseISODate(iso);
   return d.getFullYear() === ano && d.getMonth() + 1 === mes;
