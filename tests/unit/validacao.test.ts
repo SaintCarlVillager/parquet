@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dataISO, inteiroPositivo, lerObjeto, numeroFinito, objeto, texto, textoOpcional } from "../../src/lib/validacao";
+import { dataISO, inteiroPositivo, lerObjeto, objeto, texto, textoOpcional } from "../../src/lib/validacao";
 
 describe("validacao de entradas", () => {
   it("aceita inteiros positivos e rejeita zero, negativos e fracionarios", () => {
@@ -10,13 +10,6 @@ describe("validacao de entradas", () => {
     expect(inteiroPositivo(-1)).toBeNull();
     expect(inteiroPositivo(2147483648)).toBeNull();
     expect(inteiroPositivo(Number.MAX_SAFE_INTEGER + 1)).toBeNull();
-  });
-
-  it("aceita numeros finitos, inclusive strings numericas", () => {
-    expect(numeroFinito("2.5")).toBe(2.5);
-    expect(numeroFinito(0)).toBe(0);
-    expect(numeroFinito("   ")).toBeNull();
-    expect(numeroFinito("abc")).toBeNull();
   });
 
   it("normaliza textos e aplica obrigatoriedade e limite", () => {

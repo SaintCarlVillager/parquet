@@ -10,7 +10,6 @@ const { autenticar, criarToken, verificarLimite, registrarFalha, limparFalhas } 
 
 vi.mock("@/lib/auth", () => ({
   NOME_COOKIE: "escala_sessao",
-  MAX_AGE_S: 604800,
   OPCOES_COOKIE: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 604800 },
   autenticar,
   criarToken,

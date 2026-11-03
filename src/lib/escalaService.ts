@@ -279,5 +279,3 @@ export async function criarEsqueletoMes(ano: number, mes: number) {
   await inserirDesignacoes(novas);
   return escala;
 }
-
-export { estaDisponivel };

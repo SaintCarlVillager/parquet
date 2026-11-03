@@ -5,11 +5,6 @@ export function inteiroPositivo(valor: unknown): number | null {
   return Number.isSafeInteger(numero) && numero > 0 && numero <= 2147483647 ? numero : null;
 }
 
-export function numeroFinito(valor: unknown): number | null {
-  const numero = typeof valor === "number" || (typeof valor === "string" && valor.trim() !== "") ? Number(valor) : NaN;
-  return Number.isFinite(numero) ? numero : null;
-}
-
 export function texto(valor: unknown, limite: number, obrigatorio = false): string | null {
   if (typeof valor !== "string") return obrigatorio ? null : "";
   const resultado = valor.trim();
