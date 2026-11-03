@@ -34,6 +34,6 @@ jobs:
       - name: Arquivos proibidos e segredos
         run: node scripts/verifica-higiene.mjs
       - name: Dependencias vulneraveis (producao)
-        run: npm audit --omit=dev
+        run: node scripts/audita-dependencias.mjs
       - name: Diferenca sem erros de espaco
         run: git diff --check
