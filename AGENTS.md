@@ -37,7 +37,7 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
    npm run test:e2e            # validadores contra servidor local + banco Development
    npm run verify               # lint + testes + typecheck + build, gate antes do Preview
    node scripts/verifica-higiene.mjs  # arquivos proibidos/segredos (gate de higiene)
-   npm audit --omit=dev               # dependencias de producao sem vulnerabilidades
+   node scripts/audita-dependencias.mjs  # npm audit de producao; excecoes datadas em scripts/audit-excecoes.json
    git status --short ; git diff --check  # checklist de entrega antes do commit
 ```
 
