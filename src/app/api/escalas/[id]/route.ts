@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { EDICAO, TODOS, exigir } from "@/lib/auth";
-import { codigoPrisma, erroInterno, withApiError } from "@/lib/errosApi";
+import { codigoPrisma, withApiError } from "@/lib/errosApi";
 import { inteiroPositivo, lerObjeto } from "@/lib/validacao";
 import { aplicarTrocas } from "@/lib/trocas";
 import { cargaAnterior } from "@/lib/carga";
@@ -118,7 +118,7 @@ async function deleteHandler(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (codigoPrisma(e) === "P2025") return NextResponse.json({ erro: "Escala não encontrada" }, { status: 404 });
-    return erroInterno("escalas.id.DELETE", e);
+    throw e;
   }
 }
 

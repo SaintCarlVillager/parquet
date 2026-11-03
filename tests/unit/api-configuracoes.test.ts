@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { db, exigir } = vi.hoisted(() => ({
-  db: { escala: { findMany: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() } },
+  db: { escala: { deleteMany: vi.fn() } },
   exigir: vi.fn(),
 }));
 
@@ -18,21 +18,21 @@ describe("API de configuracoes", () => {
     exigir.mockResolvedValue(chefe);
   });
 
-  it("limpa todas as escalas em uma unica instrucao", async () => {
-    db.escala.findMany.mockResolvedValue([{ id: 4 }, { id: 8 }]);
+  it("apaga todas as escalas em um unico deleteMany e devolve a contagem", async () => {
+    db.escala.deleteMany.mockResolvedValue({ count: 2 });
     const resposta = await POST(new Request("http://teste/api/configuracoes/reset", { method: "POST" }));
 
     expect(resposta.status).toBe(200);
     expect(await resposta.json()).toEqual({ ok: true, apagadas: 2 });
-    expect(db.escala.deleteMany).toHaveBeenCalledWith({ where: { id: { in: [4, 8] } } });
-    expect(db.escala.delete).not.toHaveBeenCalled();
+    expect(db.escala.deleteMany).toHaveBeenCalledTimes(1);
+    expect(db.escala.deleteMany).toHaveBeenCalledWith();
   });
 
-  it("nao chama o banco quando nao ha escala", async () => {
-    db.escala.findMany.mockResolvedValue([]);
+  it("devolve zero quando o deleteMany nao apaga nenhuma escala", async () => {
+    db.escala.deleteMany.mockResolvedValue({ count: 0 });
     const resposta = await POST(new Request("http://teste/api/configuracoes/reset", { method: "POST" }));
     expect(await resposta.json()).toEqual({ ok: true, apagadas: 0 });
-    expect(db.escala.deleteMany).not.toHaveBeenCalled();
+    expect(db.escala.deleteMany).toHaveBeenCalledTimes(1);
   });
 
   it("rejeita a limpeza sem permissao", async () => {
@@ -40,6 +40,6 @@ describe("API de configuracoes", () => {
     const resposta = await POST(new Request("http://teste/api/configuracoes/reset", { method: "POST" }));
 
     expect(resposta.status).toBe(403);
-    expect(db.escala.findMany).not.toHaveBeenCalled();
+    expect(db.escala.deleteMany).not.toHaveBeenCalled();
   });
 });
