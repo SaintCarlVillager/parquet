@@ -114,7 +114,6 @@ export async function autenticar(email: string, senha: string): Promise<Sessao |
 }
 
 export const NOME_COOKIE = COOKIE;
-export const MAX_AGE_S = DURACAO_S;
 
 export const OPCOES_COOKIE = {
   httpOnly: true,

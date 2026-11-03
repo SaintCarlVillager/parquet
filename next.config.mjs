@@ -25,7 +25,6 @@ const CABECALHOS_SEGURANCA = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   env: {
     NEXT_PUBLIC_AMBIENTE: process.env.VERCEL_ENV ?? "local",
   },
