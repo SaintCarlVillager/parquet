@@ -5,6 +5,7 @@ import { codigoPrisma, erroInterno, withApiError } from "@/lib/errosApi";
 import { inteiroPositivo, lerObjeto } from "@/lib/validacao";
 import { aplicarTrocas } from "@/lib/trocas";
 import { cargaAnterior } from "@/lib/carga";
+import { janelaDoMes } from "@/lib/datas";
 
 const TRANSICOES: Record<string, string[]> = {
   RASCUNHO: ["PRONTA"],
@@ -32,7 +33,8 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
   if (!escala) return NextResponse.json({ erro: "Escala não encontrada" }, { status: 404 });
 
   const { designacoes, ...escalaBase } = escala;
-  const trocas = await db.troca.findMany({ where: { data: { gte: `${escala.ano}-${String(escala.mes).padStart(2, "0")}-01`, lt: `${escala.mes === 12 ? escala.ano + 1 : escala.ano}-${String(escala.mes === 12 ? 1 : escala.mes + 1).padStart(2, "0")}-01` } } });
+  const { inicio, fim } = janelaDoMes(escala.ano, escala.mes);
+  const trocas = await db.troca.findMany({ where: { data: { gte: inicio, lt: fim } } });
   const designacoesMascaradas = aplicarTrocas(designacoes, trocas);
 
   const promotores = await db.promotor.findMany({
@@ -157,12 +159,10 @@ async function patchHandler(req: Request, { params }: { params: Promise<{ id: st
       where: { escalaId: escala.id, promotorId: null, posicao: { codigo: { not: "C" } } },
       select: { data: true, posicaoId: true },
     });
+    const { inicio, fim } = janelaDoMes(escala.ano, escala.mes);
     const ajustes = await db.troca.findMany({
       where: {
-        data: {
-          gte: `${escala.ano}-${String(escala.mes).padStart(2, "0")}-01`,
-          lt: `${escala.mes === 12 ? escala.ano + 1 : escala.ano}-${String(escala.mes === 12 ? 1 : escala.mes + 1).padStart(2, "0")}-01`,
-        },
+        data: { gte: inicio, lt: fim },
         promotorOrigemId: null,
         posicaoId: { not: null },
       },
