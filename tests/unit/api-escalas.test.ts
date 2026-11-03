@@ -1,14 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { db, exigir, criarEsqueletoMes, gerarEscalaMes } = vi.hoisted(() => ({
-  db: { escala: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() } },
+const { db, exigir, usuarioDaRequisicao, criarEsqueletoMes, gerarEscalaMes } = vi.hoisted(() => ({
+  db: {
+    escala: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    auditoria: { create: vi.fn() },
+  },
   exigir: vi.fn(),
+  usuarioDaRequisicao: vi.fn(),
   criarEsqueletoMes: vi.fn(),
   gerarEscalaMes: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({ db }));
-vi.mock("@/lib/auth", () => ({ EDICAO: ["CHEFE"], TODOS: ["CHEFE", "OFICIAL", "PROMOTOR"], exigir }));
+vi.mock("@/lib/auth", () => ({ EDICAO: ["CHEFE"], TODOS: ["CHEFE", "OFICIAL", "PROMOTOR"], exigir, usuarioDaRequisicao }));
 vi.mock("@/lib/escalaService", () => ({ criarEsqueletoMes, gerarEscalaMes }));
 
 import { POST as criar } from "../../src/app/api/escalas/route";
@@ -25,6 +29,8 @@ describe("API de escalas", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     exigir.mockResolvedValue(chefe);
+    usuarioDaRequisicao.mockReturnValue(chefe);
+    db.auditoria.create.mockResolvedValue({ id: 1 });
   });
 
   it("valida mes e ano antes de criar o esqueleto", async () => {
@@ -54,6 +60,9 @@ describe("API de escalas", () => {
     expect(corpo.errorId).toMatch(/^[0-9a-f-]{36}$/);
     expect(JSON.stringify(corpo)).not.toContain("SQL secreto");
     expect(log).toHaveBeenCalledWith("API_ERROR", expect.objectContaining({ errorId: corpo.errorId }));
+    expect(db.auditoria.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ requestId: corpo.errorId, resultado: "FALHA", contexto: "escalas.POST" }),
+    });
     log.mockRestore();
   });
 

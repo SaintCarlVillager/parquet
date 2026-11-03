@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { gerarEscalaMes } from "@/lib/escalaService";
 import { EDICAO, exigir } from "@/lib/auth";
-import { erroInterno, withApiError } from "@/lib/errosApi";
+import { withApiError } from "@/lib/errosApi";
 import { inteiroPositivo } from "@/lib/validacao";
 
 async function postHandler(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,12 +16,8 @@ async function postHandler(req: Request, { params }: { params: Promise<{ id: str
   if (escala.status === "PUBLICADA") {
     return NextResponse.json({ erro: "Escala publicada: reabra-a antes de gerar designações" }, { status: 409 });
   }
-  try {
-    const atualizada = await gerarEscalaMes(escala.ano, escala.mes);
-    return NextResponse.json(atualizada);
-  } catch (e) {
-    return erroInterno("escalas.id.gerar.POST", e);
-  }
+  const atualizada = await gerarEscalaMes(escala.ano, escala.mes);
+  return NextResponse.json(atualizada);
 }
 
 export const POST = withApiError("escalas.id.gerar.POST", postHandler);

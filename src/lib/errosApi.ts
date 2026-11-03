@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { registrarAuditoria } from "./auditoria";
 
 export function erroInterno(contexto: string, erro: unknown, requestId = randomUUID()) {
   console.error("API_ERROR", { requestId, errorId: requestId, contexto, erro: erro instanceof Error ? erro.stack : erro });
@@ -14,7 +15,6 @@ export function withApiError<T extends Handler>(contexto: string, handler: T): (
     const req = (args as unknown[]).find((arg): arg is Request => arg instanceof Request);
     const requestId = randomUUID();
     const mutavel = ["POST", "PUT", "PATCH", "DELETE"].includes(req?.method ?? "");
-    const { registrarAuditoria } = await import("./auditoria");
     const recurso = req ? new URL(req.url).pathname : "desconhecido";
     try {
       const resposta = await executar(...args);
