@@ -34,4 +34,30 @@ describe("erros de API", () => {
     expect(JSON.stringify(corpo)).not.toContain("SQL secreto");
     expect(log).toHaveBeenCalledWith("API_ERROR", expect.objectContaining({ contexto: "rota.teste", errorId: corpo.errorId }));
   });
+
+  it("permite ajustar a resposta de erro sem trocar o errorId", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const resposta = await withApiError(
+      "rota.teste",
+      async () => {
+        throw new Error("falha");
+      },
+      (r) => {
+        r.headers.set("x-ajustado", "sim");
+        return r;
+      }
+    )();
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(500);
+    expect(resposta.headers.get("x-ajustado")).toBe("sim");
+    expect(resposta.headers.get("x-request-id")).toBe(corpo.errorId);
+  });
+
+  it("nao aplica o ajuste de erro em respostas de sucesso", async () => {
+    const ajuste = vi.fn((r) => r);
+    const resposta = await withApiError("rota.teste", async () => Response.json({ ok: true }), ajuste)();
+    expect(resposta.status).toBe(200);
+    expect(ajuste).not.toHaveBeenCalled();
+  });
 });
