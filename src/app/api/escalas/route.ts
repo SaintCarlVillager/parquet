@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { criarEsqueletoMes } from "@/lib/escalaService";
 import { EDICAO, TODOS, exigir } from "@/lib/auth";
-import { erroInterno, withApiError } from "@/lib/errosApi";
+import { withApiError } from "@/lib/errosApi";
 import { inteiroPositivo, lerObjeto } from "@/lib/validacao";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +26,8 @@ async function postHandler(req: Request) {
   if (!ano || !mes || ano < 2000 || ano > 2200 || mes > 12) {
     return NextResponse.json({ erro: "Mês/ano inválidos" }, { status: 400 });
   }
-  try {
-    const escala = await criarEsqueletoMes(ano, mes);
-    return NextResponse.json(escala, { status: 201 });
-  } catch (e) {
-    return erroInterno("escalas.POST", e);
-  }
+  const escala = await criarEsqueletoMes(ano, mes);
+  return NextResponse.json(escala, { status: 201 });
 }
 
 export const GET = withApiError("escalas.GET", getHandler);

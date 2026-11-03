@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diasDoMes, diaSemana, segundaDe, semanasDoMes, toISODate } from "../../src/lib/datas";
+import { diasDoMes, diaSemana, janelaDoMes, segundaDe, semanasDoMes, toISODate } from "../../src/lib/datas";
 
 describe("datas", () => {
   it("converte datas locais para ISO", () => {
@@ -19,6 +19,12 @@ describe("datas", () => {
     expect(diasDoMes(2026, 2)).toHaveLength(28);
     expect(diasDoMes(2026, 4)).toHaveLength(30);
     expect(diasDoMes(2026, 9)).toHaveLength(30);
+  });
+
+  it("abre a janela no dia 1 e fecha no dia 1 do mes seguinte", () => {
+    expect(janelaDoMes(2026, 9)).toEqual({ inicio: "2026-09-01", fim: "2026-10-01" });
+    expect(janelaDoMes(2026, 1)).toEqual({ inicio: "2026-01-01", fim: "2026-02-01" });
+    expect(janelaDoMes(2026, 12)).toEqual({ inicio: "2026-12-01", fim: "2027-01-01" });
   });
 
   it("monta semanas completas cobrindo o mes", () => {

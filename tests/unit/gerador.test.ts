@@ -31,6 +31,27 @@ describe("regras puras do gerador", () => {
     expect(coberturaAtiva(p, "2", "2026-09-10")).toBeUndefined();
   });
 
+  it("devolve a linha crua do export, com apelido, ao filtrar titular e auxiliar", () => {
+    const qualquerVara: number[] = [];
+    const titular = {
+      inicio: "2026-09-01",
+      fim: "2026-09-30",
+      varas: qualquerVara,
+      afastadoApelido: "Ana",
+      afastadoId: 9,
+      modalidade: "DESIGNADO",
+      afastadoAuxiliar: false,
+    };
+    const auxiliar = { ...titular, varas: [1], afastadoApelido: "Bia", afastadoAuxiliar: true };
+    const p = { coberturas: [auxiliar, titular] };
+    expect(coberturaAtiva(p, "1", "2026-09-10")).toBe(titular);
+    expect(coberturaAtiva(p, "2", "2026-09-10")).toBe(titular);
+    expect(coberturaAtiva(p, "1'", "2026-09-10")).toBe(auxiliar);
+    expect(coberturaAtiva(p, "2'", "2026-09-10")).toBeUndefined();
+    expect(coberturaAtiva(p, "1", "2026-08-31")).toBeUndefined();
+    expect(coberturaAtiva(p, "C", "2026-09-10")).toBeUndefined();
+  });
+
   it("aplica regras de inclusao e excecao por dia", () => {
     expect(regraImpede([{ tipo: "EXCETO", diasCsv: "1,3", gruposCsv: "AUDIENCIAS" }], "AUDIENCIAS", 1)).toBe(true);
     expect(regraImpede([{ tipo: "EXCETO", diasCsv: "1,3", gruposCsv: "AUDIENCIAS" }], "AUDIENCIAS", 2)).toBe(false);

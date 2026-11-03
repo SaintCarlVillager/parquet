@@ -27,7 +27,6 @@ vi.mock("@/lib/auth", () => ({
   hashSenha,
   conferirSenha,
   NOME_COOKIE: "escala_sessao",
-  MAX_AGE_S: 604800,
   OPCOES_COOKIE: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 604800 },
   criarToken: vi.fn(() => "token-novo"),
 }));

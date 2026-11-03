@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { LEITURA, exigir } from "@/lib/auth";
-import { erroInterno, withApiError } from "@/lib/errosApi";
+import { withApiError } from "@/lib/errosApi";
 import { dataISO, inteiroPositivo, lerObjeto, texto } from "@/lib/validacao";
 
 export const dynamic = "force-dynamic";
@@ -30,16 +30,12 @@ async function postHandler(req: Request) {
   if (data.slice(0, 4) !== String(ano)) {
     return NextResponse.json({ erro: "A data deve pertencer ao ano selecionado" }, { status: 400 });
   }
-  try {
-    const feriado = await db.feriado.upsert({
-      where: { data },
-      update: { nome },
-      create: { data, nome },
-    });
-    return NextResponse.json(feriado, { status: 201 });
-  } catch (e) {
-    return erroInterno("feriados.POST", e);
-  }
+  const feriado = await db.feriado.upsert({
+    where: { data },
+    update: { nome },
+    create: { data, nome },
+  });
+  return NextResponse.json(feriado, { status: 201 });
 }
 
 export const GET = withApiError("feriados.GET", getHandler);

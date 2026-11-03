@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { EDICAO_TROCAS, TODOS, exigir } from "@/lib/auth";
 import { dataISO, inteiroPositivo, lerObjeto, texto } from "@/lib/validacao";
+import { janelaDoMes } from "@/lib/datas";
 import { withApiError } from "@/lib/errosApi";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,8 @@ async function getHandler(req: Request) {
   const url = new URL(req.url);
   const ano = Number(url.searchParams.get("ano"));
   const mes = Number(url.searchParams.get("mes"));
-  const filtro = ano >= 2000 && mes >= 1 && mes <= 12 ? { data: { gte: `${ano}-${String(mes).padStart(2, "0")}-01`, lt: `${mes === 12 ? ano + 1 : ano}-${String(mes === 12 ? 1 : mes + 1).padStart(2, "0")}-01` } } : undefined;
+  const janela = ano >= 2000 && mes >= 1 && mes <= 12 ? janelaDoMes(ano, mes) : null;
+  const filtro = janela ? { data: { gte: janela.inicio, lt: janela.fim } } : undefined;
   const trocas = await db.troca.findMany({ where: filtro, orderBy: [{ data: "desc" }, { id: "desc" }], include });
   const promotores = await db.promotor.findMany({ where: { ativo: true }, orderBy: { apelido: "asc" }, select: { id: true, apelido: true, nome: true, email: true } });
   const escalas = await db.escala.findMany({

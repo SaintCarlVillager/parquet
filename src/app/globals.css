@@ -585,9 +585,6 @@ tr.linha-eu td {
   font-style: normal;
 }
 
-.barra-carga { background: #eef0f3; border-radius: 4px; height: 12px; width: 100%; overflow: hidden; }
-.barra-carga > div { background: var(--vermelho); height: 100%; }
-
 .vazio {
   text-align: center;
   padding: 46px 24px;
