@@ -69,8 +69,10 @@ Em producao, `src/lib/db.ts` usa `DATABASE_URL_PRODUCAO` quando
 1. Gere um segredo novo de pelo menos 32 caracteres.
 2. Atualize `SESSION_SECRET` nos ambientes Development, Preview e Production.
 3. Nao registre ou envie o valor por chat, commit ou log.
-4. Publique um Preview e valide login/logout.
-5. Promova para Production somente pelo painel da Vercel.
+4. Abra um PR (ou faca push na branch de um PR aberto) e valide login/logout
+   no link de Preview que a Vercel publica no PR.
+5. O merge na `main` publica em Production automaticamente; faca-o so depois
+   da validacao no Preview.
 
 A troca invalida tokens antigos. Se houver suspeita de comprometimento, faca a
 rotacao imediatamente e confirme que o login exige nova sessao.
@@ -98,11 +100,11 @@ O aplicador e idempotente para tabelas, indices, constraints e checks existentes
 Antes de alterar schema, valide o branch correto e faca backup/exportacao de
 configuracoes. Nunca execute o aplicador apontando para Production sem revisao.
 
-Antes de promover um deployment para Production, aplique o schema tambem no
-branch `main` do Neon (mesmo script, com a connection string do main). A
-promocao reutiliza o build do preview e o banco main pode ficar sem colunas ou
-tabelas novas; sintoma e 500/`Application error` em producao com
-`column ... does not exist` nos runtime logs do deployment.
+Antes do merge na `main` (que publica em Production automaticamente), aplique o
+schema tambem no branch `main` do Neon (mesmo script, com a connection string do
+main). Sem isso o banco main fica sem colunas ou tabelas novas; sintoma e
+500/`Application error` em producao com `column ... does not exist` nos runtime
+logs do deployment.
 
 Se a geracao for interrompida, mantenha a escala em `RASCUNHO`, confira
 designacoes e rode novamente `POST /api/escalas/[id]/gerar`. Custodias manuais,
@@ -129,23 +131,24 @@ npm run test:e2e
 O E2E cria dados `TESTE-*`, regenera setembro de 2026 e executa limpeza ao
 final. Nunca use Production.
 
-Deploy permitido:
+Deploy (sem comandos manuais):
 
-```powershell
-npm run verify
-npm run test:e2e
-npx vercel
-npx vercel alias escala-pj-criminal-<id>-viladesaocarlos.vercel.app saintcarlvillage.vercel.app
-```
+1. `npm run verify` local e, quando a mudanca tocar API/geracao/persistencia/
+   autenticacao/import-export, `npm run test:e2e` contra o servidor local.
+2. Push na branch do PR: a Vercel publica um Preview e comenta o link no PR. O
+   Preview usa o banco do ambiente Preview (branch `development` do Neon).
+3. Validar a mudanca nesse link de Preview.
+4. Com CI verde (`verify` + `higiene`) e Preview validado, fazer o merge na
+   `main`: a Vercel publica em Production automaticamente.
 
-Nunca use `npx vercel --prod`. A promocao Preview para Production e manual no
-painel da Vercel.
+Nunca use `npx vercel` (sem subcomando), `npx vercel --prod`, `npx vercel deploy`
+ou `npx vercel alias`. `npx vercel env ...` continua permitido para variaveis.
 
 ## Higiene E Entrega
 
 Politica de commits incrementais (um commit por feature/ajuste concluido, em
-portugues sem acentos) e deploy apenas via Preview. Antes de cada commit e
-antes de qualquer `npx vercel`:
+portugues sem acentos); deploy so pela integracao GitHub/Vercel (Preview por PR,
+Production a cada merge na `main`). Antes de cada commit e antes do merge:
 
 ```powershell
 git status --short        # conferir que so ha arquivos esperados
