@@ -20,7 +20,6 @@
     "test:e2e:exportacao": "node scripts/roda-e2e.mjs --group exportacao",
     "test:e2e:autorizacao": "node scripts/roda-e2e.mjs --group autorizacao",
     "lint": "eslint .",
-    "deploy": "node node_modules/vercel/dist/vc.js",
     "verify": "node scripts/verifica.mjs"
   },
   "dependencies": {

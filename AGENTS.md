@@ -2,7 +2,7 @@
 
 Operação deste repositório para o agente. Apresentação do Parquet e a alusão do nome ficam em `README.md`. Setup, incidentes, banco e deploy ficam em `OPERACAO.md`.
 
-App web (Next.js 15.5.28 + TypeScript + Prisma 6.19.3) da escala mensal de audiências dos promotores criminais. A tela se chama Escala PJ Criminal. Produção: `https://viladesaocarlos.vercel.app`; Preview: `https://saintcarlvillage.vercel.app`; Development: `http://localhost:3000`.
+App web (Next.js 15.5.28 + TypeScript + Prisma 6.19.3) da escala mensal de audiências dos promotores criminais. A tela se chama Escala PJ Criminal. Produção: `https://viladesaocarlos.vercel.app` (deploy automático a cada merge na `main`); Preview: link gerado pela Vercel em cada PR; Development: `http://localhost:3000`.
 
 > **Atualize este arquivo sempre que descobrir uma peculiaridade nova.**
 
@@ -35,14 +35,14 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
    npm run lint                # eslint (flat config, Next core-web-vitals)
    npm run test:unit           # testes unitarios isolados, sem Neon
    npm run test:e2e            # validadores contra servidor local + banco Development
-   npm run verify               # lint + testes + typecheck + build, gate antes do Preview
+   npm run verify               # lint + testes + typecheck + build, gate antes do push/merge
    node scripts/verifica-higiene.mjs  # arquivos proibidos/segredos (gate de higiene)
    node scripts/audita-dependencias.mjs  # npm audit de producao; excecoes datadas em scripts/audit-excecoes.json
    git status --short ; git diff --check  # checklist de entrega antes do commit
 ```
 
 - Testes end-to-end (23 validadores de gerador/regras/portarias/custódia + export/import de configurações em Excel): `scripts/valida-*.mjs`. Batem na API com sessão — rodar com `node --env-file=.env --import ./scripts/pre-sessao.mjs scripts/valida-X.mjs` (login via `SESSAO_EMAIL` e senha via `E2E_SENHA` no `.env`; aborta se algum dos dois estiver ausente; injeta o cookie no `fetch`). Mutam dados de dev (criam/removem registros TESTE e regeneram a escala de 2026-09) — nunca apontar para produção. `scripts/limpeza.mjs` remove apelidos `TESTE-*` remanescentes.
-- Testes unitários ficam em `tests/unit` e rodam isolados do Neon com `npm run test:unit`; o comando `npm run verify` é o gate obrigatório antes de Preview e executa testes unitários, typecheck e build. Os validadores E2E continuam separados porque usam banco compartilhado e dados de teste.
+- Testes unitários ficam em `tests/unit` e rodam isolados do Neon com `npm run test:unit`; o comando `npm run verify` é o gate obrigatório antes do push (o CI repete no PR) e executa testes unitários, typecheck e build. Os validadores E2E continuam separados porque usam banco compartilhado e dados de teste.
 - `npm run test:e2e` executa todos os `scripts/valida*.mjs` em sequência com sessão automática e chama `scripts/limpeza.mjs` ao final. Exige `npm run dev` ativo e nunca deve apontar para produção. Para retomar a partir de um validador: `$env:E2E_FROM="valida-rotulos.mjs"; npm run test:e2e`.
 
 ## Banco de dados
@@ -54,11 +54,11 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 
 ## Deploy — POLÍTICA (definida pelo usuário; NÃO mudar)
 
-- **Desenvolvimento**: sempre local (`npm run dev`) contra o banco Neon.
-- **Deploy**: SEMPRE `npx vercel` (ambiente **Preview**). **NUNCA `npx vercel --prod`.**
-- **Após os testes passarem**: sempre fazer o deploy com `npx vercel`, seguindo a política de Preview acima.
-- **Após o deploy Preview**: apontar o alias com `npx vercel alias escala-pj-criminal-<id>-viladesaocarlos.vercel.app saintcarlvillage.vercel.app`.
-- **Promoção Preview → Production**: feita SOMENTE pelo usuário, no painel da Vercel (Deployments → Promote to Production). **Peculiaridade**: o deployment promovido herda a `DATABASE_URL` do ambiente de origem (preview → branch development). Por isso a produção usa `DATABASE_URL_PRODUCAO` (main do Neon), resolvida em `src/lib/db.ts` quando `VERCEL_ENV === "production"` — adicionar/alterar essa env pelo CLI (`npx vercel env add DATABASE_URL_PRODUCAO production`) ou painel.
+- **Sem deploy manual.** Nunca rodar `npx vercel` (sem subcomando), `npx vercel --prod`, `npx vercel deploy` nem `npx vercel alias`; o fluxo é todo pela integração GitHub ↔ Vercel. `npx vercel env ...` (variáveis de ambiente) continua permitido.
+- **Preview automático por PR**: cada push em branch com PR gera um deployment de Preview; o link aparece no comentário do bot da Vercel no próprio PR. O Preview usa o banco do ambiente Preview (branch `development` do Neon), isolado da produção. **É nesse link que a mudança é testada.**
+- **Merge na `main` = deploy automático em Produção** (Vercel). Merge só com CI verde (`verify` + `higiene`), Preview do PR validado e autorização explícita do usuário. Tratar todo merge como publicação em produção.
+- **Mudança de schema**: aplicar no branch `main` do Neon **antes** do merge (o deploy de produção é imediato); senão a produção quebra com `column ... does not exist`. Ver `OPERACAO.md`.
+- **Banco de produção**: com `VERCEL_ENV === "production"` o `src/lib/db.ts` usa `DATABASE_URL_PRODUCAO` (branch `main` do Neon); manter essa env configurada no ambiente Production (`npx vercel env add DATABASE_URL_PRODUCAO production` ou painel).
 - **Deployment Protection (Vercel Authentication)** do projeto está DESLIGADO (previews públicos, como produção).
 - Proxy do MPSP intercepta TLS: `NODE_EXTRA_CA_CERTS` aponta para a cadeia CA local (variável de usuário; caminho fora do repositório).
 - O env `DATABASE_URL` (etc.) já está injetado nos ambientes da Vercel (integração Neon). `SESSION_SECRET` também está nos 3 ambientes (sessão HMAC).
@@ -88,9 +88,9 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 ## Convenções
 
 - **TDD obrigatorio**: toda funcionalidade nova, alteracao de regra de negocio ou correcao de bug deve seguir o ciclo Red-Green-Refactor. Primeiro escrever ou ajustar o teste que reproduz o comportamento esperado, depois implementar a menor mudanca necessaria e por fim refatorar mantendo todos os testes verdes. Nao considerar uma tarefa concluida sem testes automatizados para os casos de sucesso, negacao e borda relevantes.
-- **Gates antes do Preview**: antes de qualquer `npx vercel`, executar `npm run verify`; para alteracoes que envolvam APIs, geracao, persistencia, autenticacao ou import/export, executar tambem `npm run test:e2e` contra o servidor local e o banco Development. Falha em qualquer teste, typecheck ou build bloqueia o deploy.
+- **Gates antes do merge** (merge = producao): `npm run verify` local antes do push, CI verde no PR e validacao manual no link de Preview do PR; para alteracoes que envolvam APIs, geracao, persistencia, autenticacao ou import/export, executar tambem `npm run test:e2e` contra o servidor local e o banco Development. Falha em qualquer teste, typecheck, build ou na validacao do Preview bloqueia o merge.
 - **Commits incrementais** (usuário prefere commits a cada feature/ajuste concluído), mensagens em português sem acentos, no padrão Conventional Commits `tipo(escopo): descricao` (ver `CONTRIBUTING.md`). Titulo de PR squash tambem segue esse padrao.
-- **Toda tarefa termina testada e commitada** (validar com `npx tsc --noEmit` + `npm run build`; podem ser vários commits por tarefa). NUNCA deixar mudanças unstaged acumuladas: deploy sem commit não registra o trabalho no repositório. Se o arquivo já tiver mudanças não commitadas de outra tarefa, isolar o commit (ex.: `git stash`/checkout + reaplicar) para commitar só o que a tarefa alterou.
+- **Toda tarefa termina testada e commitada** (validar com `npx tsc --noEmit` + `npm run build`; podem ser vários commits por tarefa). NUNCA deixar mudanças unstaged acumuladas: só o que está commitado e mergeado chega ao Preview e à produção. Se o arquivo já tiver mudanças não commitadas de outra tarefa, isolar o commit (ex.: `git stash`/checkout + reaplicar) para commitar só o que a tarefa alterou.
 - **Sem comentários** no código.
 - **Acessibilidade**: todo `<label>` de formulário usa `htmlFor` + `id` no controle (grupos de checkboxes usam `fieldset.grupo-campos` + `legend`; rótulo sem controle usa `span.rotulo-campo`). Título da página é `<h1 className="page-titulo">`, seções são `<h2>`. `tests/unit/ui-acessibilidade.test.ts` trava essas regras.
 - Identidade visual MPSP: vermelho `#C40008`, preto `#212125`, Arial (títulos). Impressão A4 paisagem, 1 semana por folha.
