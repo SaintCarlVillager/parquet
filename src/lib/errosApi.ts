@@ -9,7 +9,11 @@ export function erroInterno(contexto: string, erro: unknown, requestId = randomU
 
 type Handler = (...args: never[]) => Response | Promise<Response>;
 
-export function withApiError<T extends Handler>(contexto: string, handler: T): (...args: Parameters<T>) => Promise<Response> {
+export function withApiError<T extends Handler>(
+  contexto: string,
+  handler: T,
+  ajustarErro: (resposta: NextResponse) => NextResponse = (resposta) => resposta
+): (...args: Parameters<T>) => Promise<Response> {
   const executar = handler as unknown as (...args: unknown[]) => Response | Promise<Response>;
   return async (...args) => {
     const req = (args as unknown[]).find((arg): arg is Request => arg instanceof Request);
@@ -23,7 +27,7 @@ export function withApiError<T extends Handler>(contexto: string, handler: T): (
       }
       return resposta;
     } catch (erro) {
-      const resposta = erroInterno(contexto, erro, requestId);
+      const resposta = ajustarErro(erroInterno(contexto, erro, requestId));
       if (mutavel) {
         await registrarAuditoria({ requestId, contexto, acao: req!.method, recurso, resultado: "FALHA" }, req);
       }
