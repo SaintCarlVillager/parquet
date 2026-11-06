@@ -11,10 +11,7 @@ function limparCookie(resposta: NextResponse): NextResponse {
 async function postHandler(req: Request) {
   const sessao = usuarioDaRequisicao(req);
   if (sessao) {
-    await db.usuarioPapel.updateMany({
-      where: { email: sessao.email, sessaoVersao: sessao.sessaoVersao },
-      data: { sessaoVersao: { increment: 1 } },
-    });
+    await db.$executeRaw`UPDATE "UsuarioPapel" SET "sessaoVersao" = "sessaoVersao" + 1 WHERE "email" = ${sessao.email} AND "sessaoVersao" = ${sessao.sessaoVersao}`;
   }
   return limparCookie(NextResponse.json({ ok: true }));
 }
