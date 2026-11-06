@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { db } = vi.hoisted(() => ({
   db: {
+    $executeRaw: vi.fn(),
     usuarioPapel: { updateMany: vi.fn() },
     auditoria: { create: vi.fn() },
   },
@@ -26,45 +27,48 @@ function cookieLimpo(resposta: Response) {
 describe("API de logout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    db.usuarioPapel.updateMany.mockResolvedValue({ count: 1 });
+    db.$executeRaw.mockResolvedValue(1);
     db.auditoria.create.mockResolvedValue({ id: 1 });
   });
 
   it("invalida no servidor a versao de sessao do token atual e limpa o cookie", async () => {
     const resposta = await POST(requisicao(criarToken(sessao)));
     expect(resposta.status).toBe(200);
-    expect(db.usuarioPapel.updateMany).toHaveBeenCalledWith({
-      where: { email: "chefe@mpsp.mp.br", sessaoVersao: 3 },
-      data: { sessaoVersao: { increment: 1 } },
-    });
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+    const [partes, email, versao] = db.$executeRaw.mock.calls[0];
+    expect(partes.join("?").replace(/\s+/g, " ").trim()).toBe(
+      'UPDATE "UsuarioPapel" SET "sessaoVersao" = "sessaoVersao" + 1 WHERE "email" = ? AND "sessaoVersao" = ?',
+    );
+    expect([email, versao]).toEqual(["chefe@mpsp.mp.br", 3]);
+    expect(db.usuarioPapel.updateMany).not.toHaveBeenCalled();
     expect(cookieLimpo(resposta)).toBe(true);
   });
 
   it("nao toca o banco sem cookie, mas responde ok e limpa o cookie", async () => {
     const resposta = await POST(requisicao());
     expect(resposta.status).toBe(200);
-    expect(db.usuarioPapel.updateMany).not.toHaveBeenCalled();
+    expect(db.$executeRaw).not.toHaveBeenCalled();
     expect(cookieLimpo(resposta)).toBe(true);
   });
 
   it("ignora token com assinatura invalida", async () => {
     const resposta = await POST(requisicao(`${criarToken(sessao)}x`));
     expect(resposta.status).toBe(200);
-    expect(db.usuarioPapel.updateMany).not.toHaveBeenCalled();
+    expect(db.$executeRaw).not.toHaveBeenCalled();
     expect(cookieLimpo(resposta)).toBe(true);
   });
 
   it("token antigo nao derruba sessoes mais novas", async () => {
-    db.usuarioPapel.updateMany.mockResolvedValue({ count: 0 });
+    db.$executeRaw.mockResolvedValue(0);
     const resposta = await POST(requisicao(criarToken({ ...sessao, sessaoVersao: 1 })));
     expect(resposta.status).toBe(200);
-    expect(db.usuarioPapel.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { email: "chefe@mpsp.mp.br", sessaoVersao: 1 } }));
+    expect(db.$executeRaw.mock.calls[0].slice(1)).toEqual(["chefe@mpsp.mp.br", 1]);
     expect(cookieLimpo(resposta)).toBe(true);
   });
 
   it("falha do banco devolve 500 com errorId, sem expor detalhe, e ainda limpa o cookie", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    db.usuarioPapel.updateMany.mockRejectedValue(new Error("SQL secreto"));
+    db.$executeRaw.mockRejectedValue(new Error("SQL secreto"));
     const resposta = await POST(requisicao(criarToken(sessao)));
     expect(resposta.status).toBe(500);
     const corpo = await resposta.json();
