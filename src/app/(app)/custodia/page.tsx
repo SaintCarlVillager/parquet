@@ -141,8 +141,8 @@ export default function CustodiaPage() {
         Lance aqui o PJ responsável pelas audiências de custódia de cada dia útil. Primeiro crie o esqueleto da
         escala mensal na aba Escala.
       </p>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="sucesso">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="sucesso">{msg}</p>}</div>
 
       <div className="panel">
         <div className="linha">

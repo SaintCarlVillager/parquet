@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { httpJson, mensagemHttp } from "@/lib/http";
 import { filtrarPromotores } from "@/lib/promotoresFiltros";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 interface Promotor {
   id: number;
@@ -30,6 +31,7 @@ const VARAS = [1, 2, 3, 4, 5, 6];
 export default function PromotoresPage() {
   const { papel } = useSessao();
   const chefe = podeEditar(papel);
+  const { confirmar } = useConfirmacao();
   const [lista, setLista] = useState<Promotor[]>([]);
   const [filtros, setFiltros] = useState({ tipo: "", atuacao: "", varas: [] as number[] });
   const [form, setForm] = useState<{ nome: string; apelido: string; email: string; tipo: string; atuacao: string; varas: number[]; generico: boolean; observacoes: string }>({ nome: "", apelido: "", email: "", tipo: "TITULAR", atuacao: "TODAS", varas: [], generico: false, observacoes: "" });
@@ -80,7 +82,7 @@ export default function PromotoresPage() {
   }
 
   async function excluir(p: Promotor) {
-    if (!confirm(`Excluir ${p.apelido}?`)) return;
+    if (!(await confirmar({ titulo: "Excluir promotor?", mensagem: `${p.apelido} será excluído do cadastro.`, acao: "Excluir" }))) return;
     try { await httpJson(`/api/promotores/${p.id}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e)); return; }
     carregar();
@@ -99,8 +101,8 @@ export default function PromotoresPage() {
   return (
     <div>
       <h1 className="page-titulo" data-tour="promotores-titulo">Promotores</h1>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="sucesso">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="sucesso">{msg}</p>}</div>
       <div className="linha no-print" style={{ marginBottom: 14 }}>
         <button className="btn secundario" onClick={() => window.print()}>Imprimir / PDF</button>
       </div>
@@ -142,7 +144,7 @@ export default function PromotoresPage() {
             assume a função (1 audiência/semana) e o cobridor da portaria fica com as demais funções do cargo,
             sem esse limite.
           </p>
-          {msgCargos && <p className="sucesso">{msgCargos}</p>}
+          <div role="status">{msgCargos && <p className="sucesso">{msgCargos}</p>}</div>
           <div className="linha">
             <div className="campo">
               <label htmlFor="promotores-pj-secretario">PJ Secretário</label>

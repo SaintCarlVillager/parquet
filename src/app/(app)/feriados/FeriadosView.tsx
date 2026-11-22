@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatarDataBR } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 interface Feriado { id: number; data: string; nome: string }
 
@@ -11,6 +12,7 @@ export default function FeriadosView() {
   const { papel } = useSessao();
   const chefe = podeEditar(papel);
   const anoAtual = new Date().getFullYear();
+  const { confirmar } = useConfirmacao();
   const [ano, setAno] = useState(anoAtual);
   const [lista, setLista] = useState<Feriado[]>([]);
   const [form, setForm] = useState({ data: "", nome: "" });
@@ -31,7 +33,7 @@ export default function FeriadosView() {
   }
 
   async function excluir(f: Feriado) {
-    if (!confirm(`Excluir feriado ${formatarDataBR(f.data)}?`)) return;
+    if (!(await confirmar({ titulo: "Excluir feriado?", mensagem: `O feriado de ${formatarDataBR(f.data)} será excluído.`, acao: "Excluir" }))) return;
     try { await httpJson(`/api/feriados/${f.id}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e)); return; }
     carregar();
@@ -40,7 +42,7 @@ export default function FeriadosView() {
   return (
     <div>
       <h1 className="page-titulo" data-tour="feriados-titulo">Feriados</h1>
-      {erro && <p className="erro">{erro}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
       <div className="panel">
         <div className="linha">
           <div className="campo">

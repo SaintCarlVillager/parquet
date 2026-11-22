@@ -26,6 +26,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [pos, setPos] = useState<Pos | null>(null);
   const [primeiraVisita, setPrimeiraVisita] = useState(false);
   const abriuAuto = useRef(false);
+  const dialogoRef = useRef<HTMLDialogElement>(null);
+  const focarAoAbrir = useRef(false);
+  const focoAnterior = useRef<HTMLElement | null>(null);
 
   const passos = useMemo(() => passosDaRota(pathname, papel), [pathname, papel]);
   const focado = aberto ? (passos[indice] ?? null) : null;
@@ -49,6 +52,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   const abrirTour = useCallback(() => {
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      focoAnterior.current = document.activeElement;
+    }
+    focarAoAbrir.current = true;
     setAberto(true);
     setIndice(0);
   }, []);
@@ -56,6 +63,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const fechar = useCallback(() => {
     setAberto(false);
     setPos(null);
+    focarAoAbrir.current = false;
+    const anterior = focoAnterior.current;
+    focoAnterior.current = null;
+    if (anterior?.isConnected) anterior.focus();
   }, []);
 
   const marcar = useCallback(() => {
@@ -129,6 +140,22 @@ export function TourProvider({ children }: { children: ReactNode }) {
     if (anterior !== null) setIndice(anterior);
   }, [aberto, passos, indice]);
 
+  const visivel = Boolean(aberto && focado && pos);
+
+  useEffect(() => {
+    const dialogo = dialogoRef.current;
+    if (!visivel || !dialogo) return;
+    if (typeof dialogo.showPopover === "function") {
+      if (!dialogo.matches(":popover-open")) dialogo.showPopover();
+    } else if (!dialogo.open) {
+      dialogo.setAttribute("open", "");
+    }
+    if (focarAoAbrir.current) {
+      focarAoAbrir.current = false;
+      dialogo.querySelector<HTMLButtonElement>(".tour-rodape button:last-child")?.focus();
+    }
+  }, [visivel]);
+
   const tooltip = useMemo(() => {
     if (!focado || !pos) return undefined;
     const viewport = typeof window !== "undefined" ? { largura: window.innerWidth, altura: window.innerHeight } : { largura: 1024, altura: 600 };
@@ -142,11 +169,23 @@ export function TourProvider({ children }: { children: ReactNode }) {
         <>
           <div className="tour-overlay" onClick={encerrar} />
           <div className="tour-alvo" style={{ top: pos.top, left: pos.left, width: pos.width, height: pos.height }} />
-          <div className="tour-tooltip" role="dialog" aria-label={focado.titulo} style={{ top: tooltip.top, left: tooltip.left, maxWidth: tooltip.maxWidth }}>
+          <dialog
+            ref={dialogoRef}
+            popover="manual"
+            className="tour-tooltip"
+            aria-labelledby="tour-titulo"
+            style={{ top: tooltip.top, left: tooltip.left, maxWidth: tooltip.maxWidth }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                encerrar();
+              }
+            }}
+          >
             <button type="button" className="tour-fechar" aria-label="Fechar tour" onClick={encerrar}>
               ×
             </button>
-            <strong>{focado.titulo}</strong>
+            <h2 id="tour-titulo" className="tour-titulo">{focado.titulo}</h2>
             <p>{focado.descricao}</p>
             <div className="tour-rodape">
               <span className="tour-posicao">{indice + 1}/{passos.length}</span>
@@ -157,7 +196,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
                 {indice === passos.length - 1 ? "Concluir" : "Avançar"}
               </button>
             </div>
-          </div>
+          </dialog>
         </>
       )}
     </Ctx.Provider>

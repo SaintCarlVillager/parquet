@@ -6,6 +6,7 @@ import { DIAS_SEMANA, MESES, diaSemana, formatarDataBR, parseISODate, semanasDoM
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { promotorLogadoId } from "@/lib/promotor-logado";
 import { HttpError, httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 interface Posicao { id: number; codigo: string; nome: string; grupo: string; ordem: number }
 interface GrupoCarga { grupo: string; nome: string; peso: number }
@@ -28,6 +29,7 @@ export default function EscalaPage() {
   const { papel, email } = useSessao();
   const chefe = podeEditar(papel);
   const agora = new Date();
+  const { confirmar } = useConfirmacao();
   const [mes, setMes] = useState(agora.getMonth() + 1);
   const [ano, setAno] = useState(agora.getFullYear());
   const [payload, setPayload] = useState<Payload | null>(null);
@@ -135,7 +137,7 @@ export default function EscalaPage() {
 
   async function limpar() {
     if (!payload) return;
-    if (!confirm("Limpar a escala? Todas as vagas, exceto Custódia, ficarão sem designação, preservando os dias e posições para lançamentos manuais.")) return;
+    if (!(await confirmar({ titulo: "Limpar a escala?", mensagem: "Todas as vagas, exceto Custódia, ficarão sem designação, preservando os dias e posições para lançamentos manuais.", acao: "Limpar escala" }))) return;
     setErro("");
     let data: { limpas: number };
     try { data = await httpJson<{ limpas: number }>(`/api/escalas/${payload.escala.id}/reset`, { method: "POST" }); }
@@ -281,8 +283,8 @@ export default function EscalaPage() {
   return (
     <div>
       <h1 className="page-titulo no-print" data-tour="escala-titulo">Escala mensal</h1>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="sucesso">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="sucesso">{msg}</p>}</div>
       {vagasEmBranco > 0 && !gerando && !carregando && (
         <p className="erro">
           Atenção: {vagasEmBranco} posição(ões) sem candidato disponível na geração automática — preencha
