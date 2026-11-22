@@ -2,7 +2,7 @@
 
 Operação deste repositório para o agente. Apresentação do Parquet e a alusão do nome ficam em `README.md`. Setup, incidentes, banco e deploy ficam em `OPERACAO.md`.
 
-App web (Next.js 15.5.28 + TypeScript + Prisma 6.19.3) da escala mensal de audiências dos promotores criminais. A tela se chama Escala PJ Criminal. Produção: `https://viladesaocarlos.vercel.app` (deploy automático a cada merge na `main`); Preview: link gerado pela Vercel em cada PR; Development: `http://localhost:3000`.
+App web (Next.js 15.5.29 + TypeScript + Prisma 6.19.3) da escala mensal de audiências dos promotores criminais. A tela se chama Escala PJ Criminal. Produção: `https://viladesaocarlos.vercel.app` (deploy automático a cada merge na `main`); Preview: link gerado pela Vercel em cada PR; Development: `http://localhost:3000`.
 
 > **Atualize este arquivo sempre que descobrir uma peculiaridade nova.**
 
