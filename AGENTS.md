@@ -107,3 +107,45 @@ npx prisma generate         # após alterar schema.prisma (matar node antes!)
 - `prisma/schema.prisma` — provider postgresql (+ `UsuarioPapel`: CHEFE | OFICIAL | PROMOTOR para os 3 perfis de acesso).
 - `scripts/aplica-schema-neon.mjs` + `prisma/schema-neon.sql` — infraestrutura de schema do banco (Neon).
 - `scripts/pre-sessao.mjs` — preload de sessão para os validadores (login + cookie no `fetch` global).
+
+## Design system Astryx (adoção gradual)
+
+- **Astryx** (`@astryxdesign/core`, React 19 + StyleX pré-compilado) é o design system das telas novas e das que forem migradas. Piloto migrado: `/login`. Demais telas seguem no CSS legado (`globals.css`) até serem migradas uma a uma.
+- **Tema**: `src/themes/parquet/parquetTheme.ts` herda o `neutral` e aplica a marca MPSP (acento `#C40008`, Arial, fundo `#f2f3f5`); o app é somente claro (`mode="light"`). Depois de editar o tema: `npx astryx theme build src/themes/parquet/parquetTheme.ts` (gera `parquet.js`/`parquet.css`, não editar à mão). `src/astryx-themes.ts` é gerado por `npx astryx theme add parquet`.
+- **Raiz**: `src/app/providers.tsx` aplica `InternationalizationProvider` (pt-BR, textos internos dos componentes), `Theme` e `LinkProvider` (Link do Next). `layout.tsx` importa `@astryxdesign/core/astryx.css` antes de `globals.css`.
+- **Cascata**: o CSS do Astryx fica em `@layer` e o `globals.css` é sem camada, então o legado vence onde se sobrepõe. Por isso regras legadas por elemento (`input`, `select`, `textarea`, `label`, `:focus-visible`) excluem `.astryx-field`; ao criar regra por elemento, faça o mesmo. O `reset.css` global do Astryx **não** é importado (zeraria bordas, listas e títulos das telas legadas); só entra quando todas as telas tiverem migrado.
+- **Versões fixas** (`-E`): core, cli e theme-neutral na mesma versão. Ao subir: `npm install -E @astryxdesign/core@X @astryxdesign/theme-neutral@X; npm install -D -E @astryxdesign/cli@X; npx astryx upgrade --from <antiga> --apply`, rebuild do tema e `npm run verify`.
+- O bloco `ASTRYX:START…END` abaixo é escrito por `npx astryx init` (consulta de componentes via CLI). As regras dele (ex.: "sem `<div>`", "sem hex") valem para código novo com Astryx; nas telas legadas valem as regras deste arquivo, inclusive o contrato de acessibilidade (`tests/unit/ui-acessibilidade.test.ts`).
+
+<!-- ASTRYX:START -->
+Astryx v0.7.17 · 174 components
+CLI: run every command as `npx astryx <cmd>` (shown below as `astryx ...`).
+
+SETUP (once, in app entry e.g. main.tsx) — without these, components render unstyled:
+  import "@astryxdesign/core/reset.css";
+  import "@astryxdesign/core/astryx.css";
+
+WORKFLOW — start every page from a template, never from scratch:
+1. `astryx build "<idea>"` — names the template to scaffold from and the parts it lacks.
+2. `astryx template <name> <path>` — scaffold it; keep its frame, gap and padding; replace the content.
+3. `astryx component <Name>` to read props before using one; `astryx template <Block>` prints a block example to read for a part it lacks. Astryx names differ from other libraries: buttons, badges, tokens and tabs take their text in `label` (Text, Heading and Link take children), booleans start with `is` or `has` (`isOpen`, `isDisabled`), and every input takes `value` and `onChange`.
+Changing an existing page? Keep it: skip step 2 and add components inside its sections; read a block example when it helps.
+Before you deliver a build, run `astryx doctor --built <dir>`; don't deliver it if it fails.
+
+RULES:
+- No <div> — components handle all layout and spacing.
+- Read `astryx docs layout` before changing a template's frame.
+- Dense data = rows (Table, List/Item), not Card-wrapped lists. Badge = counts only.
+- Style with component props first, then tokens (var(--color-*|--spacing-*|--radius-*)). No raw hex/px. No StyleX/Tailwind compiler here — don't use xstyle/utility classes directly. Some templates use StyleX and need a compiler plugin; see `astryx docs styling-overview`.
+- THEMES: palettes and custom colors go through the theme, never :root overrides; so does a denser or roomier app (`editor set <name> spacing tight`), never gap and padding changes page by page. A change to one kind of part (the sidebar, its selected item, the gaps in a form) is a theme change too, not props on one page: `editor how "<ask>"` names the `set … --on <part>` line. No app yet: `astryx experimental theme preview app <dir>` makes a starter app that shows the theme. To make or change a theme (colors, fonts, corners, spacing, a look from a picture), prefer the experimental theme editor over hand-written theme files: `astryx experimental theme editor new <name> --like neutral`, then `editor set <name> <thing> <value>` or `editor how "<what you want>"`; wire it with `astryx theme add <name>`; after each change look at it with `astryx experimental theme editor show <name> --png` (takes pictures of real components) and open the PNGs it writes; a theme change is not done until you have looked at the pictures. In code, extend an imported theme to customize it; `theme eject <slug>` only forks source. See `astryx docs theme`.
+- SELF-CHECK: re-read the file; replace any raw <div>/<span>, imported .css/@apply, or hardcoded #hex/px with the component or a token.
+
+`astryx help` lists every command. Key ones beyond the workflow:
+  search "<query>"   find any component / hook / doc / template
+  discover <words>   integrations you could add
+  docs <topic>       getting-started, principles, tokens, theme … (`astryx docs` lists all)
+  docs cli           commands and API reference
+  docs authoring     build an integration package, and every field it holds
+  upgrade --from <old version> --apply   run after a dependency bump
+To remove this block, run `astryx init --remove-agents`, which removes it from the agent files at the project root and in the folder you run it in; from any other file it leaves, delete everything from ASTRYX:START to ASTRYX:END.
+<!-- ASTRYX:END -->

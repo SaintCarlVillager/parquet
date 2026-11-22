@@ -33,12 +33,28 @@ describe("contrato visual de acessibilidade e craft", () => {
     expect(css).not.toMatch(/transition:\s*all\b/);
   });
 
-  it("login tem rotulos, autocomplete e alerta acessivel", () => {
-    expect(login).toMatch(/htmlFor=["']login-email["']/);
+  it("login tem rotulos, autocomplete e alerta acessivel (componentes Astryx)", () => {
+    expect(login).toMatch(/from ["']@astryxdesign\/core\/TextInput["']/);
+    expect(login).toMatch(/label=["']E-mail["']/);
+    expect(login).toMatch(/label=["']Senha["']/);
     expect(login).toMatch(/autoComplete=["']username["']/);
-    expect(login).toMatch(/spellCheck=\{false\}/);
-    expect(login).toMatch(/role=["']alert["']/);
+    expect(login).toMatch(/autoComplete=["']current-password["']/);
+    expect(login).toMatch(/hasSpellCheck=\{false\}/);
+    expect(login).toMatch(/<Banner[^>]*role=["']alert["']/);
+    expect(login).toMatch(/type=["']submit["']/);
+    expect(login).toMatch(/isLoading=\{carregando\}/);
     expect(login).toMatch(/Entrando…/);
+  });
+
+  it("raiz aplica o tema Astryx da marca MPSP em modo claro", () => {
+    const providers = ler("src/app/providers.tsx");
+    const tema = ler("src/themes/parquet/parquetTheme.ts");
+    expect(layout).toMatch(/import ["']@astryxdesign\/core\/astryx\.css["']/);
+    expect(layout).toMatch(/<Providers>\{children\}<\/Providers>/);
+    expect(layout.indexOf("astryx.css")).toBeLessThan(layout.indexOf("./globals.css"));
+    expect(providers).toMatch(/<Theme theme=\{themes\[defaultThemeSlug\]\} mode=["']light["']>/);
+    expect(ler("src/astryx-themes.ts")).toMatch(/defaultThemeSlug: keyof typeof themes = "parquet"/);
+    expect(tema).toMatch(/"--color-accent":\s*\["#C40008"/i);
   });
 
   it("sidebar marca pagina atual e rotula o tour", () => {

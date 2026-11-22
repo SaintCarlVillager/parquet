@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Card } from "@astryxdesign/core/Card";
+import { VStack } from "@astryxdesign/core/Layout";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { httpJson, mensagemHttp } from "@/lib/http";
 
 export default function LoginPage() {
@@ -21,7 +26,12 @@ export default function LoginPage() {
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
+    if (carregando) return;
     setErro("");
+    if (!email.trim() || !senha) {
+      setErro("Informe e-mail e senha.");
+      return;
+    }
     setCarregando(true);
     try {
       await httpJson("/api/login", { method: "POST", body: { email, senha } });
@@ -39,59 +49,52 @@ export default function LoginPage() {
 
   return (
     <main className="login-fundo">
-      <form
-        id="conteudo-principal"
-        className="login-caixa"
-        onSubmit={entrar}
-        aria-labelledby="login-titulo"
-        tabIndex={-1}
-      >
-        <div className="login-logo">
-          <div className="logo-mpsp" aria-hidden="true">
-            <span className="mp">MP</span>
-            <span className="sp">SP</span>
-          </div>
-          <h1 id="login-titulo">Escala de Audiências Criminais</h1>
-        </div>
-        <label className="campo" htmlFor="login-email">
-          E-mail
-          <input
-            id="login-email"
-            name="email"
-            type="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="username"
-            spellCheck={false}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoFocus
-            required
-          />
-        </label>
-        <label className="campo" htmlFor="login-senha">
-          Senha
-          <input
-            id="login-senha"
-            name="password"
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
-        {erro && (
-          <div className="login-erro" role="alert" aria-live="assertive">
-            {erro}
-          </div>
-        )}
-        <button type="submit" className="btn primario" disabled={carregando} aria-busy={carregando}>
-          {carregando ? "Entrando…" : "Entrar"}
-        </button>
-        <span className={`badge-ambiente ${ambiente}`}>{rotuloAmbiente}</span>
-      </form>
+      <Card width="100%" maxWidth={400} padding={8} elevation="high">
+        <form id="conteudo-principal" onSubmit={entrar} aria-labelledby="login-titulo" tabIndex={-1} noValidate>
+          <VStack gap={4}>
+            <div className="login-logo">
+              <div className="logo-mpsp" aria-hidden="true">
+                <span className="mp">MP</span>
+                <span className="sp">SP</span>
+              </div>
+              <h1 id="login-titulo">Escala de Audiências Criminais</h1>
+            </div>
+            <TextInput
+              label="E-mail"
+              type="email"
+              htmlName="email"
+              inputMode="email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="username"
+              hasSpellCheck={false}
+              autoCapitalize="none"
+              hasAutoCorrect={false}
+              hasAutoFocus
+              size="lg"
+            />
+            <TextInput
+              label="Senha"
+              type="password"
+              htmlName="password"
+              value={senha}
+              onChange={setSenha}
+              autoComplete="current-password"
+              size="lg"
+            />
+            {erro && <Banner status="error" title={erro} role="alert" />}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              width="100%"
+              label={carregando ? "Entrando…" : "Entrar"}
+              isLoading={carregando}
+            />
+            <span className={`badge-ambiente ${ambiente}`}>{rotuloAmbiente}</span>
+          </VStack>
+        </form>
+      </Card>
     </main>
   );
 }
