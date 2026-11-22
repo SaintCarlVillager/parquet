@@ -20,7 +20,9 @@ App web (Next.js 15.5.28 + TypeScript + Prisma 6.19.3) da escala mensal de audi�
   - **Sem `createMany`** — também vira lote; usar `inserirDesignacoes()` (`src/lib/designacoes.ts`, INSERT multi-VALUES via `$executeRawUnsafe`) ou loop de `create`.
   - **Write (`create`/`update`) com `include` de relação vira transação** — write simples e depois `findUnique` com `include` (corrigido em `designacoes/[id]`, `portarias`, `portarias/[id]`). Leituras (`findUnique`/`findMany`) com `include` funcionam normalmente.
   - **Nested create relacional** (`varas: { create: [...] }`, `promotores: { create: [...] }`) vira transação — criar o pai e depois `create` dos vínculos em loop (corrigido em `api/promotores` e `api/regras`). Nunca engolir erro genérico com `catch` que responde 409: checar duplicidade antes e deixar erros reais estourar.
-  - POST de geração leva ~25s (round-trips sequenciais ao Neon) — normal.
+  - POST de geração leva ~25s (round-trips sequenciais ao Neon) — normal. Cada consulta é uma requisição HTTP: menos consultas = mais rápido.
+  - **`relationJoins` ligado** no `schema.prisma`: `include` vira uma consulta só (JOIN lateral), sem transação; funciona no modo HTTP. Não reintroduzir leituras repetidas dos cadastros na mesma requisição (`criarEsqueletoMes` aceita os cadastros já lidos).
+  - **`cargaAnterior`** (`src/lib/carga.ts`) soma o histórico no próprio Postgres (`$queryRaw` com `GROUP BY` e a regra de cobertura em `LEFT JOIN LATERAL`); não voltar a carregar todas as designações antigas em memória.
 - **Shell é PowerShell 5.1**: não usar `&&` (usar `;` ou `; if ($?) { ... }`); caminhos com espaço sempre entre aspas; nativo que escreve no stderr vira erro amarelo "NativeCommandError" (ignorar).
 - **Arquivos `.mjs` com acentos** quebram ao serem criados via here-string/Set-Content do PowerShell (UTF-8 vira mojibake). Escrever scripts Node com ASCII (sem acentos).
 - **Dev server na porta 3000 trava o engine do Prisma**: matar o processo node antes de `prisma generate` / `npm run build`.
