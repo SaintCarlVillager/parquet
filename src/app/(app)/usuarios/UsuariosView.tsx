@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 type Usuario = { email: string; nome: string | null; papel: "CHEFE" | "OFICIAL" | "PROMOTOR"; temSenha: boolean; oficialEmail: string | null };
 type Oficial = { email: string; nome: string | null };
@@ -15,6 +16,7 @@ const PAPEIS: { v: Usuario["papel"]; rotulo: string; descricao: string }[] = [
 const FORM_VAZIO = { email: "", nome: "", papel: "PROMOTOR" as Usuario["papel"], senha: "", oficialEmail: "" };
 
 export default function UsuariosView() {
+  const { confirmar } = useConfirmacao();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [oficiais, setOficiais] = useState<Oficial[]>([]);
   const [erro, setErro] = useState("");
@@ -54,7 +56,7 @@ export default function UsuariosView() {
   }
 
   async function excluir(u: Usuario) {
-    if (!confirm(`Remover acesso de ${u.email}?`)) return;
+    if (!(await confirmar({ titulo: "Remover acesso?", mensagem: `${u.email} deixará de acessar o sistema.`, acao: "Remover" }))) return;
     try { await httpJson(`/api/usuarios?email=${encodeURIComponent(u.email)}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e, "Falha ao remover")); return; }
     carregar();
@@ -76,8 +78,8 @@ export default function UsuariosView() {
         (tudo, única edição), Oficial de Promotoria (consulta todas as telas e lança trocas vinculadas) e Promotor de Justiça
         (somente leitura de escala, custódia e listas).
       </p>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="ok">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="ok">{msg}</p>}</div>
 
       <div className="panel">
         <h2 style={{ marginTop: 0 }}>{editando ? "Editar acesso" : "Conceder acesso"}</h2>

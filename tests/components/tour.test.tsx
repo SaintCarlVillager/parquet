@@ -118,4 +118,24 @@ describe("TourProvider", () => {
     fireEvent.click(getByTestId("abrir"));
     await waitFor(() => expect(screen.getByText("Escala mensal")).toBeInTheDocument());
   });
+  it("passo e um dialog popover manual nomeado pelo titulo e recebe foco quando aberto pela pessoa", async () => {
+    window.localStorage.setItem("tour:chefe@teste", "1");
+    const { getByTestId } = montar();
+    getByTestId("abrir").focus();
+    fireEvent.click(getByTestId("abrir"));
+    const passo = await screen.findByRole("dialog", { name: "Escala mensal" });
+    expect(passo.tagName).toBe("DIALOG");
+    expect(passo).toHaveAttribute("popover", "manual");
+    expect(screen.getByRole("heading", { level: 2, name: "Escala mensal" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Avançar")).toHaveFocus());
+    fireEvent.keyDown(passo, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(getByTestId("abrir")).toHaveFocus();
+  });
+
+  it("abertura automatica na primeira visita nao rouba o foco", async () => {
+    montar();
+    await screen.findByRole("dialog", { name: "Escala mensal" });
+    expect(screen.getByText("Avançar")).not.toHaveFocus();
+  });
 });

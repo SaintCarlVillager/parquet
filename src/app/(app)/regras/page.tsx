@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { DIAS_SEMANA } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 interface PromotorVinc {
   id: number;
@@ -45,6 +46,7 @@ function resumoRegra(r: Regra): string {
 export default function RegrasPage() {
   const { papel } = useSessao();
   const chefe = podeEditar(papel);
+  const { confirmar } = useConfirmacao();
   const [regras, setRegras] = useState<Regra[]>([]);
   const [promotores, setPromotores] = useState<PromotorVinc[]>([]);
   const [form, setForm] = useState<{ id: number | null; nome: string; tipo: string; dias: number[]; grupos: string[]; promotoresIds: number[] }>({
@@ -101,7 +103,7 @@ export default function RegrasPage() {
   }
 
   async function excluir(r: Regra) {
-    if (!confirm(`Excluir a regra "${r.nome}"?`)) return;
+    if (!(await confirmar({ titulo: "Excluir regra?", mensagem: `A regra "${r.nome}" será excluída.`, acao: "Excluir" }))) return;
     try { await httpJson(`/api/regras/${r.id}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e)); return; }
     if (form.id === r.id) setForm({ id: null, nome: "", tipo: "SOMENTE", dias: [], grupos: [], promotoresIds: [] });
@@ -115,8 +117,8 @@ export default function RegrasPage() {
         Regras reutilizáveis de dias da semana, aplicadas por grupo de posições. Vincule cada regra a um ou mais
         promotores; elas restringem a geração automática e a edição manual (promotores SUBSTITUTO não as recebem).
       </p>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="ok">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="ok">{msg}</p>}</div>
 
       <div className="linha no-print" style={{ marginBottom: 14 }}>
         <button className="btn secundario" onClick={() => window.print()}>Imprimir / PDF</button>

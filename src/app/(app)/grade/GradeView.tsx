@@ -64,7 +64,7 @@ export default function GradeView() {
       <div className="linha no-print" style={{ marginBottom: 14 }}>
         <button className="btn secundario" onClick={() => window.print()}>Imprimir / PDF</button>
       </div>
-      {msg && <p className="sucesso">{msg}</p>}
+      <div role="status">{msg && <p className="sucesso">{msg}</p>}</div>
 
       <div className="panel" data-tour="grade-grade">
         <h2 style={{ marginTop: 0 }}>Carga ponderada por grupo</h2>

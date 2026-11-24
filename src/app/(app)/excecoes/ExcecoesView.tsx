@@ -86,7 +86,7 @@ export default function ExcecoesView() {
         Voltar ao estado padrão remove a exceção do cadastro.
         A Custódia é fixa em todos os dias úteis. Fins de semana e feriados não geram vagas.
       </p>
-      {erro && <p className="erro">{erro}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
       <div className="panel">
         <div className="linha">
           <div className="campo">

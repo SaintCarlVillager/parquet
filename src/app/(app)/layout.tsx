@@ -3,6 +3,7 @@ import { sessaoAtual } from "@/lib/auth";
 import SideNav from "@/app/components/SideNav";
 import { SessaoProvider } from "@/app/components/SessaoProvider";
 import { TourProvider } from "@/app/components/TourProvider";
+import { ConfirmacaoProvider } from "@/app/components/ConfirmacaoProvider";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const s = await sessaoAtual();
@@ -10,12 +11,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const sessao = { nome: s.nome, papel: s.papel, email: s.email };
   return (
     <SessaoProvider sessao={sessao}>
-      <TourProvider>
-        <div className="app">
-          <SideNav {...sessao} />
-          <main id="conteudo-principal" className="main" tabIndex={-1}>{children}</main>
-        </div>
-      </TourProvider>
+      <ConfirmacaoProvider>
+        <TourProvider>
+          <div className="app">
+            <SideNav {...sessao} />
+            <main id="conteudo-principal" className="main" tabIndex={-1}>{children}</main>
+          </div>
+        </TourProvider>
+      </ConfirmacaoProvider>
     </SessaoProvider>
   );
 }
