@@ -380,7 +380,7 @@ label:not(.astryx-field-label) { display: block; font-size: 12px; color: var(--m
 .linha { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
 
 .erro { color: var(--vermelho); margin: 8px 0; font-weight: bold; }
-.sucesso { color: #15803d; margin: 8px 0; }
+.sucesso, .ok { color: #15803d; margin: 8px 0; }
 .muted { color: var(--muted); font-size: 12px; }
 
 .cards { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -702,6 +702,9 @@ tr.linha-eu td {
 
 .tour-tooltip {
   position: fixed;
+  inset: auto;
+  margin: 0;
+  border: 0;
   z-index: 1002;
   background: #ffffff;
   color: #212125;
@@ -712,8 +715,9 @@ tr.linha-eu td {
   font-family: Arial, sans-serif;
 }
 
-.tour-tooltip strong {
+.tour-tooltip .tour-titulo {
   display: block;
+  margin-top: 0;
   color: #C40008;
   font-size: 15px;
   margin-bottom: 6px;
@@ -827,4 +831,43 @@ tr.linha-eu td {
 
 @media print {
   .tour-overlay, .tour-alvo, .tour-tooltip, .btn-tour, .tour-badge { display: none !important; }
+}
+
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--vermelho);
+  background-color: var(--vermelho-claro);
+}
+
+.dialogo {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px 22px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+.dialogo:modal { overscroll-behavior: contain; }
+.dialogo::backdrop {
+  background: rgba(18, 18, 18, 0.55);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.dialogo-titulo {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--preto);
+  text-wrap: balance;
+}
+.dialogo-mensagem {
+  margin: 0 0 18px;
+  text-wrap: pretty;
+}
+.dialogo-acoes {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
 }
