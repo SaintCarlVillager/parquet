@@ -5,6 +5,7 @@ import { formatarDataBR, MESES } from "@/lib/datas";
 import { podeEditarTrocas, useSessao } from "@/app/components/SessaoProvider";
 import { promotorLogadoId } from "@/lib/promotor-logado";
 import { httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 type P = { id: number; apelido: string; nome: string; email: string | null };
 type Posicao = { id: number; codigo: string; nome: string };
@@ -25,6 +26,7 @@ export default function TrocasPage() {
   const { papel, email } = useSessao();
   const podeEditar = podeEditarTrocas(papel);
   const agora = new Date();
+  const { confirmar } = useConfirmacao();
   const [ano, setAno] = useState(agora.getFullYear());
   const [mes, setMes] = useState(agora.getMonth() + 1);
   const [trocas, setTrocas] = useState<Troca[]>([]);
@@ -83,7 +85,7 @@ export default function TrocasPage() {
   }
 
   async function excluir(t: Troca) {
-    if (!confirm(`Excluir o ajuste de ${t.posicao?.codigo ?? "posição"} em ${formatarDataBR(t.data)}?`)) return;
+    if (!(await confirmar({ titulo: "Excluir ajuste?", mensagem: `O ajuste de ${t.posicao?.codigo ?? "posição"} em ${formatarDataBR(t.data)} será excluído.`, acao: "Excluir" }))) return;
     try { await httpJson(`/api/trocas/${t.id}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e, "Não foi possível excluir.")); return; }
     await carregar();
@@ -92,8 +94,8 @@ export default function TrocasPage() {
   return <div>
     <h1 className="page-titulo" data-tour="trocas-titulo">Trocas / Ajustes</h1>
     <p className="muted" style={{ marginTop: -8 }}>Troque ou preencha uma posição específica da escala sem alterar as regras da geração. Para uma posição vaga, selecione “Vaga sem candidato” como designado originalmente.</p>
-    {erro && <p className="erro">{erro}</p>}
-    {msg && <p className="ok">{msg}</p>}
+    <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+    <div role="status">{msg && <p className="ok">{msg}</p>}</div>
     <div className="panel no-print" data-tour="trocas-lancar">
       <div className="linha">
         <div className="campo"><label htmlFor="trocas-mes">Mês</label><select id="trocas-mes" value={mes} onChange={(e) => setMes(Number(e.target.value))}>{MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { formatarDataBR, MODALIDADES_PORTARIA, MESES } from "@/lib/datas";
 import { podeEditar, useSessao } from "@/app/components/SessaoProvider";
 import { httpJson, mensagemHttp } from "@/lib/http";
+import { useConfirmacao } from "@/app/components/ConfirmacaoProvider";
 
 const ROTULO_MODALIDADE: Record<string, string> = {
   DESIGNADO: "Designado",
@@ -30,6 +31,7 @@ const FORM_VAZIO = { id: null as number | null, numero: "", promotorAfastadoId: 
 export default function PortariasPage() {
   const { papel } = useSessao();
   const chefe = podeEditar(papel);
+  const { confirmar } = useConfirmacao();
   const [portarias, setPortarias] = useState<Portaria[]>([]);
   const [promotores, setPromotores] = useState<PromotorSel[]>([]);
   const [form, setForm] = useState(FORM_VAZIO);
@@ -101,7 +103,7 @@ export default function PortariasPage() {
   }
 
   async function excluir(p: Portaria) {
-    if (!confirm(`Excluir a portaria de cobertura de ${p.promotorAfastado.apelido}?`)) return;
+    if (!(await confirmar({ titulo: "Excluir portaria?", mensagem: `A portaria de cobertura de ${p.promotorAfastado.apelido} será excluída.`, acao: "Excluir" }))) return;
     try { await httpJson(`/api/portarias/${p.id}`, { method: "DELETE" }); }
     catch (e) { setErro(mensagemHttp(e)); return; }
     if (form.id === p.id) setForm(FORM_VAZIO);
@@ -115,8 +117,8 @@ export default function PortariasPage() {
         Registre a portaria que designa quem cobre o promotor afastado, e como (Designado, Acumulação ou Auxílio).
         No período, o promotor afastado sai da escala e quem cobre passa a poder atuar nas varas dele.
       </p>
-      {erro && <p className="erro">{erro}</p>}
-      {msg && <p className="ok">{msg}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{msg && <p className="ok">{msg}</p>}</div>
 
       <div className="linha no-print" style={{ marginBottom: 14 }}>
         <button className="btn secundario" onClick={() => window.print()}>Imprimir / PDF</button>

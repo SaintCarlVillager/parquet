@@ -39,8 +39,8 @@ export default function AcoesExcel({ chefe }: { chefe: boolean }) {
           </>
         )}
       </div>
-      {erro && <p className="erro">{erro}</p>}
-      {mensagem && <p className="sucesso">{mensagem}</p>}
+      <div role="alert">{erro && <p className="erro">{erro}</p>}</div>
+      <div role="status">{mensagem && <p className="sucesso">{mensagem}</p>}</div>
     </div>
   );
 }
