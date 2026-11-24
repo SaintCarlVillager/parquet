@@ -200,7 +200,7 @@ async function getHandler(_req: Request, { params }: { params: Promise<{ id: str
   const resumo = wb.addWorksheet("Resumo");
   const gruposDb = await db.grupoCarga.findMany({ orderBy: { grupo: "asc" } });
   const pesoDe = new Map(gruposDb.map((g) => [g.grupo, g.peso]));
-  const promotoresCarga = await db.promotor.findMany({ include: { portariasCobridor: true } });
+  const promotoresCarga = await db.promotor.findMany({ select: { id: true, apelido: true } });
   const saldoAnterior = await cargaAnterior(
     escala.ano,
     escala.mes,

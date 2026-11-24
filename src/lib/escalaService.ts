@@ -162,7 +162,7 @@ export async function gerarEscalaMes(ano: number, mes: number) {
 
   const pjs = promotoresInput.find((p) => p.generico && p.ativo && p.apelido === "PJS");
 
-  const escala = await criarEsqueletoMes(ano, mes);
+  const escala = await criarEsqueletoMes(ano, mes, { posicoes, gradeItens, feriados, excecoes });
 
   const existentes = await db.designacao.findMany({
     where: { escalaId: escala.id },
@@ -205,11 +205,9 @@ export async function gerarEscalaMes(ano: number, mes: number) {
   const vagasParaGerar = vagas.filter((v) => !vagasComAjuste.has(`${v.data}|${v.posicaoId}`));
 
   const custodiaLancada = new Map(
-    (
-      await db.designacao.findMany({
-        where: { escalaId: escala.id, promotorId: { not: null }, posicao: { codigo: "C" } },
-      })
-    ).map((d) => [d.data, d.promotorId])
+    existentes
+      .filter((d) => d.promotorId !== null && posicoesById.get(d.posicaoId)?.codigo === "C")
+      .map((d) => [d.data, d.promotorId])
   );
 
   const diasCustodiaPorPromotor = new Map<number, string[]>();
@@ -241,16 +239,28 @@ export async function gerarEscalaMes(ano: number, mes: number) {
   return escala;
 }
 
-export async function criarEsqueletoMes(ano: number, mes: number) {
+type CadastrosEsqueleto = {
+  posicoes: { id: number; codigo: string }[];
+  gradeItens: { diaSemana: number; posicaoId: number }[];
+  feriados: { data: string }[];
+  excecoes: { data: string; posicaoId: number; ativa: boolean }[];
+};
+
+async function lerCadastrosEsqueleto(): Promise<CadastrosEsqueleto> {
+  const posicoes = await db.posicao.findMany({ orderBy: { ordem: "asc" } });
+  const gradeItens = await db.gradeItem.findMany();
+  const feriados = await db.feriado.findMany();
+  const excecoes = await db.gradeExcecao.findMany();
+  return { posicoes, gradeItens, feriados, excecoes };
+}
+
+export async function criarEsqueletoMes(ano: number, mes: number, cadastros?: CadastrosEsqueleto) {
   const escala = await db.escala.upsert({
     where: { ano_mes: { ano, mes } },
     update: { status: "RASCUNHO" },
     create: { ano, mes, status: "RASCUNHO" },
   });
-  const posicoes = await db.posicao.findMany({ orderBy: { ordem: "asc" } });
-  const gradeItens = await db.gradeItem.findMany();
-  const feriados = await db.feriado.findMany();
-  const excecoes = await db.gradeExcecao.findMany();
+  const { posicoes, gradeItens, feriados, excecoes } = cadastros ?? (await lerCadastrosEsqueleto());
   const existentes = await db.designacao.findMany({ where: { escalaId: escala.id }, select: { data: true, posicaoId: true } });
   const existentesPorVaga = new Set(existentes.map((d) => `${d.data}|${d.posicaoId}`));
   const gradePorDia = new Map<number, number[]>();

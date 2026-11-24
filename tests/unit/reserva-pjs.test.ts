@@ -13,6 +13,7 @@ const { db, inserirDesignacoes, atualizarDesignacoes } = vi.hoisted(() => ({
     designacao: { findMany: vi.fn() },
     troca: { findMany: vi.fn() },
     $executeRawUnsafe: vi.fn(),
+    $queryRaw: vi.fn(async () => []),
   },
   inserirDesignacoes: vi.fn(async (_linhas: unknown[]) => undefined),
   atualizarDesignacoes: vi.fn(async (
