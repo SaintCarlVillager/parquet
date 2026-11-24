@@ -57,6 +57,13 @@ describe("contrato visual de acessibilidade e craft", () => {
     expect(tema).toMatch(/"--color-accent":\s*\["#C40008"/i);
   });
 
+  it("regras legadas por elemento nao atingem campos Astryx", () => {
+    const seletores = [...css.matchAll(/^\s*([^{}@/][^{}]*)\{/gm)].map((m) => m[1]);
+    const porElemento = seletores.filter((sel) => /(^|[\s,(])(input|select|textarea)\b/.test(sel) && !/\.[\w-]+\s+(input|select|textarea)/.test(sel));
+    expect(porElemento.length).toBeGreaterThan(0);
+    for (const sel of porElemento) expect(sel, sel).toMatch(/:not\(\.astryx-field \*\)/);
+  });
+
   it("sidebar marca pagina atual e rotula o tour", () => {
     expect(sideNav).toMatch(/aria-label=["']Principal["']/);
     expect(sideNav).toMatch(/aria-current=\{ativo \? ["']page["'] : undefined\}/);

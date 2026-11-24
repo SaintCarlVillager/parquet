@@ -358,7 +358,7 @@ a:focus-visible {
   font-family: inherit;
   transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
 }
-textarea { width: 100%; resize: vertical; }
+textarea:not(.astryx-field *) { width: 100%; resize: vertical; }
 :where(input, select, textarea):not(.astryx-field *):focus-visible {
   outline: none;
   border-color: var(--vermelho);
@@ -833,9 +833,9 @@ tr.linha-eu td {
   .tour-overlay, .tour-alvo, .tour-tooltip, .btn-tour, .tour-badge { display: none !important; }
 }
 
-input:user-invalid,
-select:user-invalid,
-textarea:user-invalid {
+input:user-invalid:not(.astryx-field *),
+select:user-invalid:not(.astryx-field *),
+textarea:user-invalid:not(.astryx-field *) {
   border-color: var(--vermelho);
   background-color: var(--vermelho-claro);
 }
