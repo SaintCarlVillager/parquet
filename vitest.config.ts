@@ -15,6 +15,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
+      // Tema Astryx: configuracao de tokens e saidas geradas pela CLI.
+      exclude: ["src/themes/**", "src/astryx-themes.ts"],
       thresholds: {
         statements: 23,
         branches: 68,

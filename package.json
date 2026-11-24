@@ -23,15 +23,19 @@
     "verify": "node scripts/verifica.mjs"
   },
   "dependencies": {
+    "@astryxdesign/core": "0.7.17",
+    "@astryxdesign/theme-neutral": "0.7.17",
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^6.19.3",
     "@prisma/client": "^6.19.3",
+    "@stylexjs/stylex": "0.19.2",
     "exceljs": "4.4.0",
     "next": "^15.5.29",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "0.7.17",
     "@eslint/eslintrc": "^3.3.7",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
